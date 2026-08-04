@@ -1,0 +1,28 @@
+stages:
+  - .pre
+  - test
+  - deploy
+  - verify
+  - .post
+
+variables:
+  GATUS_DOMAIN: "status.intranet.xbhl.online"
+
+include:
+  - component: $CI_SERVER_FQDN/home-lab/automations/docker-compose-service-deployment@v2.0.3
+    inputs:
+      vm-hostname: nas.srv.xbhl.intranet
+      vm-ssh-username: $SSH_USER
+      vm-ssh-private-key: $SSH_PRIVATE_KEY
+      service-name: gatus
+      container-name: gatus
+      container-location: /share/Container/services/gatus`
+      cloudflare-dns-entry-name: $GATUS_DOMAIN
+      cloudflare-zone-id: $CLOUDFLARE_ZONE_ID
+      cloudflare-dns-api-token: $CLOUDFLARE_DNS_API_TOKEN
+      delete-existing-container-files: true
+
+setup:generate-build-artifacts:
+  script:
+    - cp src/.env $BUILD_ARTIFACTS_DIR
+    - sed -i "s|^GATUS_DOMAIN=.*|GATUS_DOMAIN=${GATUS_DOMAIN}|" $BUILD_ARTIFACTS_DIR/.env

@@ -1,0 +1,56 @@
+services:
+  gatus:
+    image: ghcr.io/twin/gatus:v5.36.0
+    container_name: gatus
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:?err}
+      - POSTGRES_USER=${POSTGRES_USER:?err}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
+    volumes:
+      - config:/config
+    hostname: gatus.ctr.xbhl.intranet
+    networks:
+      - gatus
+      - proxy
+    ports:
+      - "${GATUS_PORT:?err}:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gatus-router.rule=Host(`${GATUS_DOMAIN:?err}`)"
+      - "traefik.http.routers.gatus-router.entrypoints=websecure"
+      - "traefik.http.routers.gatus-router.tls=true"
+      - "traefik.http.routers.gatus-router.service=gatus"
+      - "traefik.http.services.gatus.loadbalancer.server.port=${GATUS_PORT:?err}"
+      - "traefik.docker.network=proxy"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:18.4
+    volumes:
+      - db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:?err}
+      - POSTGRES_USER=${POSTGRES_USER:?err}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
+    networks:
+      - gatus
+    restart: unless-stopped
+
+volumes:
+  db:
+    driver: local
+
+  config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./config
+
+networks:
+  gatus:
+
+  proxy:
+    external: true

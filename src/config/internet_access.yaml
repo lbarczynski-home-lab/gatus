@@ -1,0 +1,24 @@
+endpoints:
+  - name: google-dns
+    group: internet
+    url: "icmp://8.8.8.8"
+    interval: 30s
+    conditions:
+      - "[CONNECTED] == true"
+      - "[RESPONSE_TIME] < 200"
+
+  - name: cloudflare-dns
+    group: internet
+    url: "icmp://1.1.1.1"
+    interval: 30s
+    conditions:
+      - "[CONNECTED] == true"
+      - "[RESPONSE_TIME] < 200"
+
+  - name: google-https
+    group: internet
+    url: "https://google.com"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 500"
