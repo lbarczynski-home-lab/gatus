@@ -11,12 +11,12 @@ variables:
 include:
   - component: $CI_SERVER_FQDN/home-lab/automations/docker-compose-service-deployment@v2.0.3
     inputs:
-      vm-hostname: nas.srv.xbhl.intranet
+      vm-hostname: infrastructure.vm.xbhl.intranet
       vm-ssh-username: $SSH_USER
       vm-ssh-private-key: $SSH_PRIVATE_KEY
       service-name: gatus
       container-name: gatus
-      container-location: /share/Container/services/gatus
+      container-location: /opt/containers/gatus
       cloudflare-dns-entry-name: $GATUS_DOMAIN
       cloudflare-zone-id: $CLOUDFLARE_ZONE_ID
       cloudflare-dns-api-token: $CLOUDFLARE_DNS_API_TOKEN
