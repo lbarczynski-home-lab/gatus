@@ -1,0 +1,9 @@
+endpoints:
+  - name: gitlab-status
+    group: gitlab
+    url: "https://gitlab.intranet.xbhl.online/-/readiness?token=${GITLAB_STATUS_TOKEN}"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].status == ok"
+      - "[BODY].master_check.0.status == ok"

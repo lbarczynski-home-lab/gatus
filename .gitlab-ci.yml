@@ -26,3 +26,4 @@ setup:generate-build-artifacts:
   script:
     - cp src/.env $BUILD_ARTIFACTS_DIR
     - sed -i "s|^GATUS_DOMAIN=.*|GATUS_DOMAIN=${GATUS_DOMAIN}|" $BUILD_ARTIFACTS_DIR/.env
+    - sed -i "s|^GITLAB_STATUS_TOKEN=.*|GITLAB_STATUS_TOKEN=${GITLAB_STATUS_TOKEN}|" $BUILD_ARTIFACTS_DIR/.env
