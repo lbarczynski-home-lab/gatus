@@ -3,7 +3,10 @@ metrics: true
 ui:
   title: XBHL.online status
   header: XBHL.online
+  dashboard-heading: Health dashboard
+  dashboard-subheading: Real-time homelab services monitoring
   link: https://${GATUS_DOMAIN}
+  default-sort-by: group
 
 storage:
   type: postgres
