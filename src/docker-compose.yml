@@ -29,7 +29,7 @@ services:
   postgres:
     image: postgres:18.4
     volumes:
-      - db:/var/lib/postgresql/data
+      - db:/var/lib/postgresql
     environment:
       - POSTGRES_DB=${POSTGRES_DB:?err}
       - POSTGRES_USER=${POSTGRES_USER:?err}
