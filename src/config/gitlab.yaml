@@ -6,4 +6,4 @@ endpoints:
     conditions:
       - "[STATUS] == 200"
       - "[BODY].status == ok"
-      - "[BODY].master_check.0.status == ok"
+      - "[BODY].master_check[0].status == 'ok'"
