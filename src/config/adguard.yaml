@@ -1,0 +1,45 @@
+endpoints:
+  - name: resolve-intranet-short-hostname-ip
+    group: adguard
+    dns:
+      query-name: "dns.xbhl"
+      query-type: "A"
+    conditions:
+      - "[BODY] == 10.100.0.53"
+      - "[DNS_RCODE] == NOERROR"
+
+  - name: resolve-intranet-short-hostname-alias
+    group: adguard
+    dns:
+      query-name: "dns.xbhl"
+      query-type: "CNAME"
+    conditions:
+      - "[BODY] == dns.vm.xbhl.intranet."
+      - "[DNS_RCODE] == NOERROR"
+
+  - name: verify-adguard-container-status
+    group: adguard
+    url: "http://dns.vm.xbhl.intranet:2375/containers/adguard/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == 'healthy'"
+
+  - name: adguard-dns-query
+    group: adguard
+    url: "dns.xbhl"
+    dns:
+      query-name: "google.com"
+      query-type: "CAA"
+    conditions:
+      - '[BODY] == 0 issue "pki.goog"'
+      - "[DNS_RCODE] == NOERROR"
+
+  - name: adguard-public-hostname
+    group: adguard
+    url: "https://adguard.intranet.xbhl.online"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
