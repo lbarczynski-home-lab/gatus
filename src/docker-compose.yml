@@ -1,10 +1,17 @@
 services:
   gatus:
-    image: ghcr.io/twin/gatus:v5.36.0
+    build:
+      context: .
+      dockerfile: Dockerfile.gatus
+      args:
+        GATUS_VERSION: ${GATUS_VERSION}
+    image: gatus-extended:${GATUS_VERSION}
+    pull_policy: build
     container_name: gatus
     environment:
       - GATUS_DOMAIN=${GATUS_DOMAIN:?err}
       - GATUS_CONFIG_PATH=/config
+      - GATUS_LOG_LEVEL=INFO
       - POSTGRES_DB=${POSTGRES_DB:?err}
       - POSTGRES_USER=${POSTGRES_USER:?err}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
@@ -22,10 +29,11 @@ services:
       - "traefik.http.routers.gatus-router.entrypoints=websecure"
       - "traefik.http.routers.gatus-router.tls=true"
       - "traefik.http.routers.gatus-router.service=gatus"
-      - "traefik.http.services.gatus.loadbalancer.server.port=${GATUS_PORT:?err}"
+      - "traefik.http.services.gatus.loadbalancer.server.port=8080"
       - "traefik.docker.network=proxy"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   postgres:
@@ -36,6 +44,11 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:?err}
       - POSTGRES_USER=${POSTGRES_USER:?err}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
     restart: unless-stopped
