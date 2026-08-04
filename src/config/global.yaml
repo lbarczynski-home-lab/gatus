@@ -1,0 +1,13 @@
+metrics: true
+
+ui:
+  title: XBHL.online status
+  header: XBHL.online
+  link: https://${GATUS_DOMAIN}
+
+storage:
+  type: postgres
+  path: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+  caching: true
+  maximum-number-of-results: 100
+  maximum-number-of-events: 50

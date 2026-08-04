@@ -3,6 +3,7 @@ services:
     image: ghcr.io/twin/gatus:v5.36.0
     container_name: gatus
     environment:
+      - GATUS_DOMAIN=${GATUS_DOMAIN:?err}
       - POSTGRES_DB=${POSTGRES_DB:?err}
       - POSTGRES_USER=${POSTGRES_USER:?err}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
@@ -10,7 +11,7 @@ services:
       - config:/config
     hostname: gatus.ctr.xbhl.intranet
     networks:
-      - gatus
+      - internal
       - proxy
     ports:
       - "${GATUS_PORT:?err}:8080"
@@ -35,7 +36,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:?err}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
     networks:
-      - gatus
+      - internal
     restart: unless-stopped
 
 volumes:
@@ -50,7 +51,7 @@ volumes:
       device: ./config
 
 networks:
-  gatus:
+  internal:
 
   proxy:
     external: true
