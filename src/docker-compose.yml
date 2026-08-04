@@ -1,13 +1,8 @@
 services:
   gatus:
-    build:
-      context: .
-      dockerfile: Dockerfile.gatus
-      args:
-        GATUS_VERSION: ${GATUS_VERSION}
-    image: gatus-extended:${GATUS_VERSION}
-    pull_policy: build
+    image: ghcr.io/twin/gatus:${GATUS_VERSION}
     container_name: gatus
+    hostname: gatus.ctr.xbhl.intranet
     environment:
       - GATUS_DOMAIN=${GATUS_DOMAIN:?err}
       - GATUS_CONFIG_PATH=/config
@@ -18,12 +13,17 @@ services:
       - GITLAB_STATUS_TOKEN=${GITLAB_STATUS_TOKEN:?err}
     volumes:
       - config:/config
-    hostname: gatus.ctr.xbhl.intranet
+      - bin:/bin:ro
     networks:
       - internal
       - proxy
     ports:
       - "${GATUS_PORT:?err}:8080"
+    healthcheck:
+      test: ["CMD", "/bin/busybox", "wget", "--quiet", "--spider", "http://127.0.0.1:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gatus-router.rule=Host(`${GATUS_DOMAIN:?err}`)"
@@ -57,6 +57,13 @@ services:
 volumes:
   db:
     driver: local
+
+  bin:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./bin
 
   config:
     driver: local
