@@ -16,7 +16,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:?err}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
     volumes:
-      - ./config:/config
+      - config:/config
     hostname: gatus.ctr.xbhl.intranet
     networks:
       - internal
@@ -56,6 +56,13 @@ services:
 volumes:
   db:
     driver: local
+
+  config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./config
 
 networks:
   internal:
