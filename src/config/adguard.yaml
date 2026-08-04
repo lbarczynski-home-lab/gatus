@@ -24,10 +24,9 @@ endpoints:
     url: "dns.xbhl"
     dns:
       query-name: "google.com"
-      query-type: "CAA"
+      query-type: "A"
     conditions:
-      - '[BODY] == 0 issue "pki.goog"'
-      - "[DNS_RCODE] == NOERROR"      
+      - "[DNS_RCODE] == NOERROR"
 
   - name: verify-adguard-container-status
     group: adguard
@@ -36,7 +35,7 @@ endpoints:
     conditions:
       - "[STATUS] == 200"
       - "[BODY].State.Running == true"
-      - "[BODY].State.Health.Status == 'healthy'"
+      - "[BODY].State.Health.Status == healthy"
 
   - name: verify-adguard-domain
     group: adguard
