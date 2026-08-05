@@ -12,6 +12,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
       - GITLAB_STATUS_TOKEN=${GITLAB_STATUS_TOKEN:?err}
       - OPEN_WEBUI_AUTH_TOKEN=${OPEN_WEBUI_AUTH_TOKEN:?err}
+      - TAUTULLI_API_KEY=${TAUTULLI_API_KEY:?err}
     volumes:
       - config:/config
       - bin:/bin:ro
@@ -21,7 +22,7 @@ services:
     ports:
       - "${GATUS_PORT:?err}:8080"
     healthcheck:
-      test: ["CMD", "/bin/busybox", "wget", "--quiet", "--spider", "http://127.0.0.1:8080/health"]
+      test: [ "CMD", "/bin/busybox", "wget", "--quiet", "--spider", "http://127.0.0.1:8080/health" ]
       interval: 15s
       timeout: 5s
       retries: 5

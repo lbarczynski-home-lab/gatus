@@ -1,0 +1,19 @@
+endpoints:
+  - name: tautulli-connection-status
+    group: tautulli
+    url: "https://tautulli.intranet.xbhl.online/api/v2?apikey=${TAUTULLI_API_KEY}&cmd=status"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].response.result == success"
+      - "[BODY].response.message == Ok"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+
+  - name: tautulli-container-status
+    group: tautulli
+    url: "http://media.vm.xbhl.intranet:2375/containers/tautulli/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
