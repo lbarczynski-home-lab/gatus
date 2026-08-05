@@ -1,6 +1,6 @@
 endpoints:
   - name: google-dns
-    group: internet
+    group: internet-access
     url: "icmp://8.8.8.8"
     interval: 30s
     conditions:
@@ -8,7 +8,7 @@ endpoints:
       - "[RESPONSE_TIME] < 200"
 
   - name: cloudflare-dns
-    group: internet
+    group: internet-access
     url: "icmp://1.1.1.1"
     interval: 30s
     conditions:
@@ -16,7 +16,7 @@ endpoints:
       - "[RESPONSE_TIME] < 200"
 
   - name: google-https
-    group: internet
+    group: internet-access
     url: "https://google.com"
     interval: 60s
     conditions:
