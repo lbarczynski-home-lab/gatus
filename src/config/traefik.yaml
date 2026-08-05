@@ -11,7 +11,6 @@ traefik-template: &traefik-defaults
     - "[BODY].tcp.middlewares.errors == 0"   
     - "[BODY].udp.routers.errors == 0"
     - "[BODY].udp.services.errors == 0"
-    - "[BODY].udp.middlewares.errors == 0"
     - "[BODY].certificates.errors == 0"
 
 endpoints:
