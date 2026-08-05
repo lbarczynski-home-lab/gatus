@@ -11,6 +11,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:?err}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
       - GITLAB_STATUS_TOKEN=${GITLAB_STATUS_TOKEN:?err}
+      - OPEN_WEBUI_AUTH_TOKEN=${OPEN_WEBUI_AUTH_TOKEN:?err}
     volumes:
       - config:/config
       - bin:/bin:ro
