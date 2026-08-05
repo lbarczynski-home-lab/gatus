@@ -1,0 +1,18 @@
+endpoints:
+  - name: seerr-connection-status
+    group: seerr
+    url: "https://requests.intranet.xbhl.online/api/v1/status"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].restartRequired == false"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+
+  - name: seerr-container-status
+    group: seerr
+    url: "http://media.vm.xbhl.intranet:2375/containers/seerr/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
