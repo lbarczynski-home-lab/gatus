@@ -1,0 +1,18 @@
+endpoints:
+  - name: qbittorrent-connection-status
+    group: qBittorrent
+    url: "https://qbittorrent.intranet.xbhl.online/api/v2/sync/maindata"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].server_state.connection_status == connected"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+
+  - name: qbittorrent-container-status
+    group: qBittorrent
+    url: "http://media.vm.xbhl.intranet:2375/containers/qbittorrent/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
