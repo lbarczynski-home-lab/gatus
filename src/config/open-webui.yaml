@@ -1,0 +1,27 @@
+endpoints:
+  - name: open-webui-health-status
+    group: open-webui
+    url: "https://ai.intranet.xbhl.online/health"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].status == ok"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+      
+  - name: open-webui-query-models
+    group: open-webui
+    url: "https://ai.intranet.xbhl.online/api/models"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "len([BODY].data) > 0" # there is any model avaliable
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+
+  - name: open-webui-container-status
+    group: open-webui
+    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/openwebui/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"

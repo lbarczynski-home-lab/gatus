@@ -1,5 +1,14 @@
 endpoints:
-  - name: gitlab-status
+  - name: gitlab-liveness-status
+    group: gitlab
+    url: "https://gitlab.intranet.xbhl.online/-/liveness?token=${GITLAB_STATUS_TOKEN}"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].status == ok"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+      
+  - name: gitlab-readiness-status
     group: gitlab
     url: "https://gitlab.intranet.xbhl.online/-/readiness?token=${GITLAB_STATUS_TOKEN}"
     interval: 30s
@@ -7,3 +16,13 @@ endpoints:
       - "[STATUS] == 200"
       - "[BODY].status == ok"
       - "[BODY].master_check[0].status == ok"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+
+  - name: gitlab-container-status
+    group: gitlab
+    url: "http://code.vm.xbhl.intranet:2375/containers/gitlab/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
