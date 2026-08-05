@@ -1,6 +1,3 @@
-variables:
-  GATUS_DOMAIN: "status.intranet.xbhl.online"
-
 include:
   - component: $CI_SERVER_FQDN/home-lab/automations/docker-compose-service-deployment@v2.0.4
     inputs:
@@ -10,7 +7,7 @@ include:
       service-name: gatus
       container-name: gatus
       container-location: /opt/containers/gatus
-      cloudflare-dns-entry-name: $GATUS_DOMAIN
+      cloudflare-dns-entry-name: $SERVICE_HOSTNAME
       cloudflare-zone-id: $CLOUDFLARE_ZONE_ID
       cloudflare-dns-api-token: $CLOUDFLARE_DNS_API_TOKEN
       delete-existing-container-files: true
@@ -18,7 +15,7 @@ include:
 setup:generate-build-artifacts:
   script:
     - cp src/.env $BUILD_ARTIFACTS_DIR
-    - sed -i "s|^GATUS_DOMAIN=.*|GATUS_DOMAIN=${GATUS_DOMAIN}|" $BUILD_ARTIFACTS_DIR/.env
+    - sed -i "s|^GATUS_DOMAIN=.*|GATUS_DOMAIN=${SERVICE_HOSTNAME}|" $BUILD_ARTIFACTS_DIR/.env
     - sed -i "s|^GITLAB_STATUS_TOKEN=.*|GITLAB_STATUS_TOKEN=${GITLAB_STATUS_TOKEN}|" $BUILD_ARTIFACTS_DIR/.env
     # prepare busybox
     - mkdir -p $BUILD_ARTIFACTS_DIR/bin
