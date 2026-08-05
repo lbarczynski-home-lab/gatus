@@ -12,6 +12,8 @@ endpoints:
     group: open-webui
     url: "https://ai.intranet.xbhl.online/api/models"
     interval: 30s
+    headers:
+      Authorization: "Bearer ${OPEN_WEBUI_AUTH_TOKEN}"
     conditions:
       - "[STATUS] == 200"
       - "len([BODY].data) > 0" # there is any model avaliable
