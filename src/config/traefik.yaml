@@ -1,4 +1,4 @@
-traefik-template: &traefik-defaults
+traefik-api-template: &traefik-api-overview-template
   group: traefik
   interval: 30s
   conditions:
@@ -12,28 +12,65 @@ traefik-template: &traefik-defaults
     - "[BODY].udp.routers.errors == 0"
     - "[BODY].udp.services.errors == 0"
     - "[BODY].certificates.errors == 0"
+    - "[CERTIFICATE_EXPIRATION] > 48h"
+
+traefik-container-template: &traefik-container-status-template
+  group: traefik
+  interval: 30s
+  conditions:
+    - "[STATUS] == 200"
+    - "[BODY].State.Running == true"
+    - "[BODY].State.Health.Status == healthy"
 
 endpoints:
-  - name: traefik-dns-vm
-    <<: *traefik-defaults
+  - name: traefik-dns-vm-api-status
+    <<: *traefik-api-overview-template
     url: "https://traefik-dns.intranet.xbhl.online/api/overview"
 
-  - name: traefik-cloud-vm
-    <<: *traefik-defaults
+  - name: traefik-dns-vm-container-status
+    <<: *traefik-container-status-template
+    url: "http://dns.vm.xbhl.intranet:2375/containers/traefik/json"
+
+  - name: traefik-cloud-vm-api-status
+    <<: *traefik-api-overview-template
     url: "https://traefik-cloud.intranet.xbhl.online/api/overview"
 
-  - name: traefik-infrastructure-vm
-    <<: *traefik-defaults
+  - name: traefik-cloud-vm-container-status
+    <<: *traefik-container-status-template
+    url: "http://cloud.vm.xbhl.intranet:2375/containers/traefik/json"
+
+  - name: traefik-infrastructure-vm-api-status
+    <<: *traefik-api-overview-template
     url: "https://traefik-infrastructure.intranet.xbhl.online/api/overview"
 
-  - name: traefik-media-vm
-    <<: *traefik-defaults
+  - name: traefik-infrastructure-vm-container-status
+    <<: *traefik-container-status-template
+    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/traefik/json"
+
+  - name: traefik-media-vm-api-status
+    <<: *traefik-api-overview-template
     url: "https://traefik-media.intranet.xbhl.online/api/overview"
 
-  - name: traefik-nas-srv
-    <<: *traefik-defaults
-    url: "https://traefik.nas.intranet.xbhl.online/api/overview"
+  - name: traefik-media-vm-container-status
+    <<: *traefik-container-status-template
+    url: "http://media.vm.xbhl.intranet:2375/containers/traefik/json"
 
-  - name: traefik-proxy-vm
-    <<: *traefik-defaults
+  - name: traefik-proxy-vm-api-status
+    <<: *traefik-api-overview-template
     url: "https://traefik.intranet.xbhl.online/api/overview"
+
+  - name: traefik-proxy-vm-container-status
+    <<: *traefik-container-status-template
+    url: "http://proxy.vm.xbhl.intranet:2375/containers/traefik/json"
+
+  - name: traefik-nas-srv-api-status
+    <<: *traefik-api-overview-template
+    url: "https://traefik/api/overview"
+    headers:
+      Host: "traefik.nas.intranet.xbhl.online"
+    client:
+      insecure: true
+
+  - name: traefik-nas-vm-container-status
+    <<: *traefik-container-status-template
+    url: "http://172.17.0.1:2375/containers/traefik/json"
