@@ -7,7 +7,7 @@ include:
       service-name: gatus
       container-name: gatus
       container-location: /opt/containers/gatus
-      cloudflare-dns-entry-name: $SERVICE_HOSTNAME
+      cloudflare-dns-entry-name: status.intranet.xbhl.online
       cloudflare-zone-id: $CLOUDFLARE_ZONE_ID
       cloudflare-dns-api-token: $CLOUDFLARE_DNS_API_TOKEN
       delete-existing-container-files: true
