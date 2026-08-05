@@ -14,8 +14,8 @@ services:
       - OPEN_WEBUI_AUTH_TOKEN=${OPEN_WEBUI_AUTH_TOKEN:?err}
       - TAUTULLI_API_KEY=${TAUTULLI_API_KEY:?err}
     volumes:
-      - config:/config
-      - bin:/bin:ro
+      - ./config:/config
+      - ./bin:/bin:ro
     networks:
       - internal
       - proxy
@@ -59,20 +59,6 @@ services:
 volumes:
   db:
     driver: local
-
-  bin:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./bin
-
-  config:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./config
 
 networks:
   internal:
