@@ -1,0 +1,40 @@
+traefik-template: &traefik-defaults
+  group: traefik
+  interval: 30s
+  conditions:
+    - "[STATUS] == 200"
+    - "[BODY].http.routers.errors == 0"
+    - "[BODY].http.services.errors == 0"
+    - "[BODY].http.middlewares.errors == 0"
+    - "[BODY].tcp.routers.errors == 0"
+    - "[BODY].tcp.services.errors == 0"
+    - "[BODY].tcp.middlewares.errors == 0"   
+    - "[BODY].udp.routers.errors == 0"
+    - "[BODY].udp.services.errors == 0"
+    - "[BODY].udp.middlewares.errors == 0"
+    - "[BODY].certificates.errors == 0"
+
+endpoints:
+  - name: traefik-dns-vm
+    <<: *traefik-defaults
+    url: "https://traefik-dns.intranet.xbhl.online/api/overview"
+
+  - name: traefik-cloud-vm
+    <<: *traefik-defaults
+    url: "https://traefik-cloud.intranet.xbhl.online/api/overview"
+
+  - name: traefik-infrastructure-vm
+    <<: *traefik-defaults
+    url: "https://traefik-infrastructure.intranet.xbhl.online/api/overview"
+
+  - name: traefik-media-vm
+    <<: *traefik-defaults
+    url: "https://traefik-media.intranet.xbhl.online/api/overview"
+
+  - name: traefik-nas-srv
+    <<: *traefik-defaults
+    url: "https://traefik.nas.intranet.xbhl.online/api/overview"
+
+  - name: traefik-proxy-vm
+    <<: *traefik-defaults
+    url: "https://traefik.intranet.xbhl.online/api/overview"
