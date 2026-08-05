@@ -5,7 +5,7 @@ endpoints:
     interval: 30s
     conditions:
       - "[STATUS] == 200"
-      - "[BODY].status == ok"
+      - "[BODY].status == true"
       - "[CERTIFICATE_EXPIRATION] > 48h"
       
   - name: open-webui-query-models
