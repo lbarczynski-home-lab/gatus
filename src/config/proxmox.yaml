@@ -1,0 +1,25 @@
+proxmox-direct-api-template: &proxmox-direct-api-template
+  group: proxmox
+  interval: 30s
+  client:
+    insecure: true
+  headers:
+    Authorization: "PVEAPIToken=${PVE_API_TOKEN}"
+  conditions:
+    - "[STATUS] == 200"
+
+endpoints:
+  - name: pve-01-machine-status
+    <<: *proxmox-direct-api-template
+    url: "https://pve01.srv.xbhl.intranet:8006/api2/json/nodes/pve-01/status"
+
+  - name: pve-02-machine-status
+    <<: *proxmox-direct-api-template
+    url: "https://pve02.srv.xbhl.intranet:8006/api2/json/nodes/pve-02/status"
+
+  - name: pve-main-gateway-status
+    <<: *proxmox-direct-api-template
+    url: "https://pve.intranet.xbhl.online/api2/json/nodes"
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] < 48h"
