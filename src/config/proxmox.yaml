@@ -51,7 +51,7 @@ endpoints:
     url: "https://pbs.vm.xbhl.intranet:8007/api2/json/nodes/pbs/status"
     conditions:
     - "[STATUS] == 200"
-    - "[BODY].root.avail > 50000000000" # expected to keep at least ~5% free space
+    - "[BODY].data.root.avail > 50000000000" # expected to keep at least ~5% free space
 
   - name: pbs-main-gateway-status
     group: proxmox
