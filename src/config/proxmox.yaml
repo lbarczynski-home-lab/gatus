@@ -17,7 +17,31 @@ endpoints:
     <<: *proxmox-direct-api-template
     url: "https://pve02.srv.xbhl.intranet:8006/api2/json/nodes/pve-02/status"
 
+  - name: pbs-ping
+    <<: *proxmox-direct-api-template
+    url: "https://pbs.vm.xbhl.intranet:8007/api2/json/ping"
+    conditions:
+    - "[STATUS] == 200"
+    - "[BODY].data.pong == true"
+
+  - name: pbs-hard-drive-space-check
+    <<: *proxmox-direct-api-template
+    url: "https://pbs.vm.xbhl.intranet:8007/api2/json/nodes/pbs/status"
+    conditions:
+    - "[STATUS] == 200"
+    - "[BODY].root.avail > 50000000000" # expected to keep at least ~5% free space
+
   - name: pve-main-gateway-status
+    group: proxmox
+    interval: 30s    
+    headers:
+      Authorization: "PVEAPIToken=${PVE_API_TOKEN}"
+    url: "https://pve.intranet.xbhl.online/api2/json/nodes"
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+
+  - name: pbs-main-gateway-status
     group: proxmox
     interval: 30s    
     headers:
