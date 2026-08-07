@@ -14,6 +14,7 @@ services:
       - OPEN_WEBUI_AUTH_TOKEN=${OPEN_WEBUI_AUTH_TOKEN:?err}
       - TAUTULLI_API_KEY=${TAUTULLI_API_KEY:?err}
       - PVE_API_TOKEN=${PVE_API_TOKEN:?err}
+      - PBS_API_TOKEN=${PBS_API_TOKEN:?err}
     volumes:
       - ./config:/config
       - ./bin:/bin:ro

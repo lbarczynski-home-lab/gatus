@@ -21,6 +21,7 @@ setup:generate-build-artifacts:
     - sed -i "s|^OPEN_WEBUI_AUTH_TOKEN=.*|OPEN_WEBUI_AUTH_TOKEN=${OPEN_WEBUI_AUTH_TOKEN}|" $BUILD_ARTIFACTS_DIR/.env
     - sed -i "s|^TAUTULLI_API_KEY=.*|TAUTULLI_API_KEY=${TAUTULLI_API_KEY}|" $BUILD_ARTIFACTS_DIR/.env
     - sed -i "s|^PVE_API_TOKEN=.*|PVE_API_TOKEN=${PVE_TOKEN_ID}=${PVE_TOKEN_SECRET}|" $BUILD_ARTIFACTS_DIR/.env
+    - sed -i "s|^PBS_API_TOKEN=.*|PBS_API_TOKEN=${PBS_TOKEN_ID}:${PBS_TOKEN_SECRET}|" $BUILD_ARTIFACTS_DIR/.env
     # prepare busybox
     - mkdir -p $BUILD_ARTIFACTS_DIR/bin
     - wget https://www.busybox.net/downloads/binaries/1.35.0-x86_64-linux-musl/busybox -O $BUILD_ARTIFACTS_DIR/bin/busybox
