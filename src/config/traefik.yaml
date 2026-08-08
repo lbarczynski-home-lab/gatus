@@ -58,10 +58,14 @@ endpoints:
   - name: traefik-proxy-vm-api-status
     <<: *traefik-api-overview-template
     url: "https://traefik.intranet.xbhl.online/api/overview"
+    conditions:
+    - "[STATUS] == 200"
 
   - name: traefik-proxy-vm-container-status
     <<: *traefik-container-status-template
     url: "http://proxy.vm.xbhl.intranet:2375/containers/traefik/json"
+    conditions:
+    - "[STATUS] == 200"
 
   - name: traefik-nas-srv-api-status
     <<: *traefik-api-overview-template
@@ -71,6 +75,6 @@ endpoints:
     client:
       insecure: true
 
-  - name: traefik-nas-vm-container-status
-    <<: *traefik-container-status-template
-    url: "http://172.17.0.1:2375/containers/traefik/json"
+  # - name: traefik-nas-vm-container-status
+  #   <<: *traefik-container-status-template
+  #   url: "http://nas.srv.xbhl.intranet:2375/containers/traefik/json"
