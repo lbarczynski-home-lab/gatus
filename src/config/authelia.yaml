@@ -1,0 +1,8 @@
+endpoints:
+  - name: authelia-health
+    group: authelia
+    url: "https://auth.xbhl.online/api/health"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].status == OK"
