@@ -1,0 +1,18 @@
+endpoints:
+  - name: nextcloud-health-status
+    group: nextcloud
+    url: "https://nextcloud.xbhl.online/status.php"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].installed == true"
+      - "[BODY].maintenance == false"
+
+  - name: nextcloud-container-status
+    group: nextcloud
+    url: "http://cloud.vm.xbhl.intranet:2375/containers/nextcloud/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
