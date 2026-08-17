@@ -7,10 +7,29 @@ endpoints:
       - "[STATUS] == 200"
       - "[BODY].installed == true"
       - "[BODY].maintenance == false"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
 
   - name: nextcloud-container-status
     group: nextcloud
     url: "http://cloud.vm.xbhl.intranet:2375/containers/nextcloud/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
+
+  - name: nextcloud-office-health-status
+    group: nextcloud
+    url: "https://office.xbhl.online/hosting/capabilities"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].hasMobileSupport == true"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+
+  - name: nextcloud-office-container-status
+    group: nextcloud
+    url: "http://cloud.vm.xbhl.intranet:2375/containers/collabora/json"
     interval: 30s
     conditions:
       - "[STATUS] == 200"
