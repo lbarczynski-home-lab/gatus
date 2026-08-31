@@ -22,6 +22,13 @@ setup:generate-build-artifacts:
     - sed -i "s|^TAUTULLI_API_KEY=.*|TAUTULLI_API_KEY=${TAUTULLI_API_KEY}|" $BUILD_ARTIFACTS_DIR/.env
     - sed -i "s|^PVE_API_TOKEN=.*|PVE_API_TOKEN=${PVE_TOKEN_ID}=${PVE_TOKEN_SECRET}|" $BUILD_ARTIFACTS_DIR/.env
     - sed -i "s|^PBS_API_TOKEN=.*|PBS_API_TOKEN=${PBS_TOKEN_ID}:${PBS_TOKEN_SECRET}|" $BUILD_ARTIFACTS_DIR/.env
+    - sed -i "s|^DISCORD_WEBHOOK_URL=.*|DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}|" $BUILD_ARTIFACTS_DIR/.env
+    - sed -i "s|^SMTP_HOST=.*|SMTP_HOST=${SMTP_HOST}|" $BUILD_ARTIFACTS_DIR/.env
+    - sed -i "s|^SMTP_PORT=.*|SMTP_PORT=${SMTP_PORT}|" $BUILD_ARTIFACTS_DIR/.env
+    - sed -i "s|^SMTP_USERNAME=.*|SMTP_USERNAME=${SMTP_USERNAME}|" $BUILD_ARTIFACTS_DIR/.env
+    - sed -i "s|^SMTP_PASSWORD=.*|SMTP_PASSWORD=${SMTP_PASSWORD}|" $BUILD_ARTIFACTS_DIR/.env
+    - sed -i "s|^SMTP_FROM=.*|SMTP_FROM=${SMTP_FROM}|" $BUILD_ARTIFACTS_DIR/.env
+    - sed -i "s|^SMTP_TO=.*|SMTP_TO=${SMTP_TO}|" $BUILD_ARTIFACTS_DIR/.env
     # prepare busybox
     - mkdir -p $BUILD_ARTIFACTS_DIR/bin
     - wget https://www.busybox.net/downloads/binaries/1.35.0-x86_64-linux-musl/busybox -O $BUILD_ARTIFACTS_DIR/bin/busybox

@@ -15,6 +15,13 @@ services:
       - TAUTULLI_API_KEY=${TAUTULLI_API_KEY:?err}
       - PVE_API_TOKEN=${PVE_API_TOKEN:?err}
       - PBS_API_TOKEN=${PBS_API_TOKEN:?err}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:?err}
+      - SMTP_HOST=${SMTP_HOST:?err}
+      - SMTP_PORT=${SMTP_PORT:?err}
+      - SMTP_USERNAME=${SMTP_USERNAME:?err}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:?err}
+      - SMTP_FROM=${SMTP_FROM:?err}
+      - SMTP_TO=${SMTP_TO:?err}
     volumes:
       - ./config:/config
       - ./bin:/bin:ro
