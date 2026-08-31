@@ -1,0 +1,18 @@
+endpoints:
+  - name: whats-up-docker-health
+    group: whats-up-docker
+    url: "https://wud.intranet.xbhl.online/health"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].uptime > 0"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+
+  - name: whats-up-docker-container-status
+    group: whats-up-docker
+    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/seerr/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
