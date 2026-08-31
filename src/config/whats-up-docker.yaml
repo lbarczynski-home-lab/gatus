@@ -10,7 +10,7 @@ endpoints:
 
   - name: whats-up-docker-container-status
     group: whats-up-docker
-    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/seerr/json"
+    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/whats-up-docker/json"
     interval: 30s
     conditions:
       - "[STATUS] == 200"
