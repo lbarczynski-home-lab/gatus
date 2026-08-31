@@ -1,3 +1,7 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
 endpoints:
   - name: seerr-connection-status
     group: seerr
@@ -7,6 +11,7 @@ endpoints:
       - "[STATUS] == 200"
       - "[BODY].restartRequired == false"
       - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
 
   - name: seerr-container-status
     group: seerr

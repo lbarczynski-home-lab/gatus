@@ -1,3 +1,7 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
 traefik-api-template: &traefik-api-overview-template
   group: traefik
   interval: 30s
@@ -13,6 +17,7 @@ traefik-api-template: &traefik-api-overview-template
     - "[BODY].udp.services.errors == 0"
     - "[BODY].certificates.errors == 0"
     - "[CERTIFICATE_EXPIRATION] > 48h"
+  alerts: *alerts
 
 traefik-container-template: &traefik-container-status-template
   group: traefik

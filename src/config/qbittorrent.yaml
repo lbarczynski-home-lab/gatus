@@ -1,3 +1,7 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
 endpoints:
   - name: qbittorrent-connection-status
     group: qBittorrent
@@ -7,6 +11,7 @@ endpoints:
       - "[STATUS] == 200"
       - "[BODY].server_state.connection_status == connected"
       - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
 
   - name: qbittorrent-container-status
     group: qBittorrent

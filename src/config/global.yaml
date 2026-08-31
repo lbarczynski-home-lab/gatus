@@ -20,9 +20,10 @@ alerting:
     webhook-url: "${DISCORD_WEBHOOK_URL}"
     default-alert:
       enabled: true
-      failure-threshold: 3
-      success-threshold: 2
       send-on-resolved: true
+      description: "healthcheck failed"
+      success-threshold: 3
+      failure-threshold: 5
 
   email:
     from: "${SMTP_FROM}"
@@ -33,6 +34,7 @@ alerting:
     to: "${SMTP_TO}"
     default-alert:
       enabled: true
-      failure-threshold: 3
-      success-threshold: 2
       send-on-resolved: true
+      description: "healthcheck failed"
+      success-threshold: 3
+      failure-threshold: 10

@@ -1,3 +1,7 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
 endpoints:
   - name: whats-up-docker-health
     group: whats-up-docker
@@ -7,6 +11,7 @@ endpoints:
       - "[STATUS] == 200"
       - "[BODY].uptime > 0"
       - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
 
   - name: whats-up-docker-container-status
     group: whats-up-docker

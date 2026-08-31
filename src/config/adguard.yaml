@@ -1,3 +1,7 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
 endpoints:
   - name: resolve-intranet-short-hostname-ip
     group: adguard
@@ -8,6 +12,7 @@ endpoints:
     conditions:
       - "[BODY] == 10.100.0.53"
       - "[DNS_RCODE] == NOERROR"
+    alerts: *alerts
 
   - name: resolve-intranet-short-hostname-alias
     group: adguard
@@ -18,6 +23,7 @@ endpoints:
     conditions:
       - "[BODY] == dns.vm.xbhl.intranet."
       - "[DNS_RCODE] == NOERROR"
+    alerts: *alerts
 
   - name: resolve-google-domain-with-adguard
     group: adguard
@@ -27,6 +33,7 @@ endpoints:
       query-type: "A"
     conditions:
       - "[DNS_RCODE] == NOERROR"
+    alerts: *alerts
 
   - name: verify-adguard-container-status
     group: adguard
@@ -44,3 +51,4 @@ endpoints:
     conditions:
       - "[STATUS] == 200"
       - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts

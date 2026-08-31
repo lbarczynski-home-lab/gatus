@@ -1,3 +1,7 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
 pve-direct-api-template: &pve-direct-api-template
   group: proxmox
   interval: 30s
@@ -7,6 +11,7 @@ pve-direct-api-template: &pve-direct-api-template
     Authorization: "PVEAPIToken=${PVE_API_TOKEN}"
   conditions:
     - "[STATUS] == 200"
+  alerts: *alerts
 
 pbs-direct-api-template: &pbs-direct-api-template
   group: proxmox
@@ -17,6 +22,7 @@ pbs-direct-api-template: &pbs-direct-api-template
     Authorization: "PBSAPIToken=${PBS_API_TOKEN}"
   conditions:
     - "[STATUS] == 200"
+  alerts: *alerts
 
 endpoints:
   # Proxmox Virtual Environment
@@ -37,6 +43,7 @@ endpoints:
     conditions:
       - "[STATUS] == 200"
       - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
 
   # Proxmox Backup Server
   - name: pbs-ping
@@ -62,3 +69,4 @@ endpoints:
     conditions:
       - "[STATUS] == 200"
       - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts

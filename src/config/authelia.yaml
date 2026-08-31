@@ -1,3 +1,7 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
 endpoints:
   - name: authelia-health
     group: authelia
@@ -6,3 +10,4 @@ endpoints:
     conditions:
       - "[STATUS] == 200"
       - "[BODY].status == OK"
+    alerts: *alerts

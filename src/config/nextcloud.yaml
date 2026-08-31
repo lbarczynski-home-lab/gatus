@@ -1,3 +1,7 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
 endpoints:
   - name: nextcloud-health-status
     group: nextcloud
@@ -8,6 +12,7 @@ endpoints:
       - "[BODY].installed == true"
       - "[BODY].maintenance == false"
       - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
 
   - name: nextcloud-container-status
     group: nextcloud
@@ -26,6 +31,7 @@ endpoints:
       - "[STATUS] == 200"
       - "[BODY].hasMobileSupport == true"
       - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
 
   - name: nextcloud-office-container-status
     group: nextcloud

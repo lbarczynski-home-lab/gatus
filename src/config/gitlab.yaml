@@ -1,3 +1,7 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
 endpoints:
   - name: gitlab-liveness-status
     group: gitlab
@@ -7,6 +11,7 @@ endpoints:
       - "[STATUS] == 200"
       - "[BODY].status == ok"
       - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
       
   - name: gitlab-readiness-status
     group: gitlab
@@ -17,6 +22,7 @@ endpoints:
       - "[BODY].status == ok"
       - "[BODY].master_check[0].status == ok"
       - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
 
   - name: gitlab-container-status
     group: gitlab
