@@ -21,7 +21,6 @@ alerting:
     default-alert:
       enabled: true
       send-on-resolved: true
-      description: "healthcheck failed"
       success-threshold: 3
       failure-threshold: 5
 
@@ -35,6 +34,5 @@ alerting:
     default-alert:
       enabled: true
       send-on-resolved: true
-      description: "healthcheck failed"
       success-threshold: 3
       failure-threshold: 10
