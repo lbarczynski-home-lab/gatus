@@ -1,0 +1,23 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
+endpoints:
+  - name: searxng-health-status
+    group: searxng
+    url: "https://search.intranet.xbhl.online/healthz"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == OK"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: searxng-container-status
+    group: searxng
+    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/searxng/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
