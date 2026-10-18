@@ -72,6 +72,10 @@ endpoints:
     <<: *traefik-api-overview-template
     url: "https://ha.proxy.intranet.xbhl.online/api/overview"
 
+  - name: traefik-ha-vm-container-status
+    <<: *traefik-container-status-template
+    url: "http://ha.vm.xbhl.intranet:2375/containers/traefik/json"
+
   - name: traefik-proxy-vm-api-status
     <<: *traefik-api-overview-template
     url: "https://traefik.intranet.xbhl.online/api/overview"
