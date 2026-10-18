@@ -60,6 +60,18 @@ endpoints:
     <<: *traefik-container-status-template
     url: "http://media.vm.xbhl.intranet:2375/containers/traefik/json"
 
+  - name: traefik-code-vm-api-status
+    <<: *traefik-api-overview-template
+    url: "https://code.proxy.intranet.xbhl.online/api/overview"
+
+  - name: traefik-code-vm-container-status
+    <<: *traefik-container-status-template
+    url: "http://code.vm.xbhl.intranet:2375/containers/traefik/json"
+
+  - name: traefik-ha-vm-api-status
+    <<: *traefik-api-overview-template
+    url: "https://ha.proxy.intranet.xbhl.online/api/overview"
+
   - name: traefik-proxy-vm-api-status
     <<: *traefik-api-overview-template
     url: "https://traefik.intranet.xbhl.online/api/overview"
