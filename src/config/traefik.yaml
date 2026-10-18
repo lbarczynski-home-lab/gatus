@@ -30,7 +30,7 @@ traefik-container-template: &traefik-container-status-template
 endpoints:
   - name: traefik-dns-vm-api-status
     <<: *traefik-api-overview-template
-    url: "https://traefik-dns.intranet.xbhl.online/api/overview"
+    url: "https://dns.proxy.intranet.xbhl.online/api/overview"
 
   - name: traefik-dns-vm-container-status
     <<: *traefik-container-status-template
@@ -38,7 +38,7 @@ endpoints:
 
   - name: traefik-cloud-vm-api-status
     <<: *traefik-api-overview-template
-    url: "https://traefik-cloud.intranet.xbhl.online/api/overview"
+    url: "https://cloud.proxy.intranet.xbhl.online/api/overview"
 
   - name: traefik-cloud-vm-container-status
     <<: *traefik-container-status-template
@@ -46,7 +46,7 @@ endpoints:
 
   - name: traefik-infrastructure-vm-api-status
     <<: *traefik-api-overview-template
-    url: "https://traefik-infrastructure.intranet.xbhl.online/api/overview"
+    url: "https://infrastructure.proxy.intranet.xbhl.online/api/overview"
 
   - name: traefik-infrastructure-vm-container-status
     <<: *traefik-container-status-template
@@ -54,7 +54,7 @@ endpoints:
 
   - name: traefik-media-vm-api-status
     <<: *traefik-api-overview-template
-    url: "https://traefik-media.intranet.xbhl.online/api/overview"
+    url: "https://media.proxy.intranet.xbhl.online/api/overview"
 
   - name: traefik-media-vm-container-status
     <<: *traefik-container-status-template
@@ -76,7 +76,7 @@ endpoints:
     <<: *traefik-api-overview-template
     url: "https://traefik/api/overview"
     headers:
-      Host: "traefik.nas.intranet.xbhl.online"
+      Host: "nas.proxy.intranet.xbhl.online"
     client:
       insecure: true
 
