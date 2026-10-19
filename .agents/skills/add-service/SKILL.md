@@ -37,18 +37,13 @@ Domain tiers (for orientation only): `<app>.xbhl.online` (public, Cloudflare Tun
 
 ## 3. Discovery
 
-Run these in order:
-
-1. `./.agents/skills/add-service/scripts/find-deployments.sh <service>` — reads every sibling repo's `.gitlab-ci.yml` and prints deployments (`repo`, `service_name`, `container_name`, `vm_hostname`, `domain`). Every deployment in the matching repo is one component, in file order.
-   - No match → ask the user for `<container_name>`, `<vm_hostname>` and `<public_domain>`.
-   - Same `container_name` on several hosts → out of scope (section 1).
-2. For each component: `./.agents/skills/add-service/scripts/inspect-service.sh <container_name> <vm_hostname>`
-
-   | Exit | Meaning | Action |
-   | :--- | :--- | :--- |
-   | 0 | Found, healthcheck present | Continue. |
-   | 2 | No Docker `HEALTHCHECK` | Stop. Tell the user the container needs a healthcheck first (the container check asserts `State.Health.Status == healthy`, which can never pass without one) and offer to add it to `../<repo>/docker-compose.yml`. |
-   | 3 | Not found | The deployment metadata does not match the running container; ask the user for the correct `<container_name>`. |
+1. Read `../<repo>/.gitlab-ci.yml`, where `<repo>` is the service name the user gave. If that directory does not exist, ask the user for the repo path.
+   - Every `docker-compose-service-deployment` include is one component, in file order; its inputs give `container-name`, `vm-hostname`, `service-name` and `cloudflare-dns-entry-name`.
+   - An input is missing → ask the user for that value.
+   - Same `container-name` on several hosts → out of scope (section 1).
+2. For each component run `./.agents/skills/add-service/scripts/inspect-service.sh <container_name> <vm_hostname>`. It prints the container's state as JSON or fails with an error.
+   - Error → the deployment inputs do not match the running container; ask the user for the correct `<container_name>` and `<vm_hostname>`.
+   - `health_status` is `null` → stop. Tell the user the container needs a Docker `HEALTHCHECK` first (the container check asserts `State.Health.Status == healthy`, which can never pass without one) and offer to add it to `../<repo>/docker-compose.yml`.
 
 ## 4. Choosing Health Endpoints
 
