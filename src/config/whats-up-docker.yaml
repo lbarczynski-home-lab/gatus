@@ -3,7 +3,7 @@ alerts: &alerts
   - type: email
 
 endpoints:
-  - name: whats-up-docker-health
+  - name: whats-up-docker-health-status
     group: whats-up-docker
     url: "https://wud.intranet.xbhl.online/health"
     interval: 30s
