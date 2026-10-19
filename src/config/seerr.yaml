@@ -13,6 +13,16 @@ endpoints:
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts: *alerts
 
+  - name: seerr-appdata-status
+    group: seerr
+    url: "https://requests.intranet.xbhl.online/api/v1/status/appdata"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].appDataPermissions == true"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
   - name: seerr-container-status
     group: seerr
     url: "http://media.vm.xbhl.intranet:2375/containers/seerr/json"
