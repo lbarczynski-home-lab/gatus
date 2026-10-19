@@ -40,7 +40,7 @@ Domain tiers (for orientation only): `<app>.xbhl.online` (public, Cloudflare Tun
 Run these in order:
 
 1. `./.agents/skills/add-service/scripts/find-deployments.sh <service>` — reads every sibling repo's `.gitlab-ci.yml` and prints deployments (`repo`, `service_name`, `container_name`, `vm_hostname`, `domain`). Every deployment in the matching repo is one component, in file order.
-   - No match → run step 2 without `vm_hostname`; if it prints candidates, ask the user which one. If there is nothing, ask the user for `<container_name>`, `<vm_hostname>` and `<public_domain>`.
+   - No match → ask the user for `<container_name>`, `<vm_hostname>` and `<public_domain>`.
    - Same `container_name` on several hosts → out of scope (section 1).
 2. For each component: `./.agents/skills/add-service/scripts/inspect-service.sh <container_name> <vm_hostname>`
 
@@ -48,8 +48,7 @@ Run these in order:
    | :--- | :--- | :--- |
    | 0 | Found, healthcheck present | Continue. |
    | 2 | No Docker `HEALTHCHECK` | Stop. Tell the user the container needs a healthcheck first (the container check asserts `State.Health.Status == healthy`, which can never pass without one) and offer to add it to `../<repo>/docker-compose.yml`. |
-   | 3 | Not found | Show the printed candidates and ask the user. |
-   | 4 | Found on several hosts | Out of scope (section 1). |
+   | 3 | Not found | The deployment metadata does not match the running container; ask the user for the correct `<container_name>`. |
 
 ## 4. Choosing Health Endpoints
 
