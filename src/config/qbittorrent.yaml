@@ -4,7 +4,7 @@ alerts: &alerts
 
 endpoints:
   - name: qbittorrent-connection-status
-    group: qBittorrent
+    group: qbittorrent
     url: "https://qbittorrent.intranet.xbhl.online/api/v2/sync/maindata"
     interval: 30s
     conditions:
@@ -14,7 +14,7 @@ endpoints:
     alerts: *alerts
 
   - name: qbittorrent-container-status
-    group: qBittorrent
+    group: qbittorrent
     url: "http://media.vm.xbhl.intranet:2375/containers/qbittorrent/json"
     interval: 30s
     conditions:
