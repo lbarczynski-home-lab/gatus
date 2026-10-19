@@ -19,9 +19,7 @@ All examples use the fictional `example-app`. A complete worked example is in [e
 
 This skill covers **Docker containers** reachable through the Docker API on `<vm_hostname>:2375`. For anything else (hypervisors, DNS resolution, ICMP, network devices, a container replicated on several hosts) stop and tell the user it is outside this skill — those checks are written by hand and this skill's rules would distort them.
 
-A group file that contains only out-of-scope checks starts with `# lint-ignore-file: <reason>`, so the linter skips its endpoint rules. Never add this marker to a file that monitors an in-scope container.
-
-Required tools: `curl`, `jq`, `yq` (mikefarah).
+Required tools: `curl`, `jq`.
 
 ## 2. Terms
 
@@ -81,7 +79,7 @@ If two endpoints map to the same `<type>`, keep the one used by `docker_healthch
    3. Short plain-text body → `"[BODY] == <exact raw body>"` (keep any quotes that are part of the body, escaped as `\"`).
    4. HTML → `"[BODY] == pat(*<title>...</title>*)"` with the page's exact `<title>`.
    5. XML → `"[BODY] == pat(*<root-element-name*)"`.
-   6. Empty body → no body condition; add `# lint-ignore: body-condition empty response body` to the `- name:` line.
+   6. Empty body → no body condition.
 3. `"[CERTIFICATE_EXPIRATION] > 48h"` — leaves two days to react when certificate renewal fails.
 
 **Container check** (`<component_name>-container-status`): exactly the three conditions from the template. It explains *why* an external check failed (stopped vs. unhealthy container).
@@ -109,14 +107,14 @@ When an endpoint needs a credential:
 - Field order: `name`, `group`, `url`, `interval`, `headers`, `conditions`, `alerts`.
 
 **Update / audit mode** (the file already exists):
-- Endpoints outside this skill's scope (section 1) stay unchanged, at the top of `endpoints:`, in their original order. Existing `# lint-ignore:` comments stay.
+- Endpoints outside this skill's scope (section 1) stay unchanged, at the top of `endpoints:`, in their original order.
 - Standard endpoints are rebuilt with sections 4–8. An endpoint name that breaks the naming rules is renamed. Gatus stores history per group + name, so a rename drops that endpoint's history — list every rename in the final report.
 - An audit of all groups is this procedure repeated for each `src/config/*.yaml` except `global.yaml`.
 
 ## 9. Validation
 
 1. `curl` every external URL without a token and confirm the status and body match the written conditions. Token-protected URLs cannot be tested locally; list them in the report.
-2. `./.agents/skills/add-service/scripts/lint-config.sh src/config/<group_name>.yaml` must print `OK`. It enforces sections 5–8 mechanically, so fix the config rather than adding `lint-ignore`; the only allowed ignore is rule 5.2.6.
+2. Re-read `git diff` against sections 2 and 5–8 (names, condition order, alerts only on external checks, endpoint and field order) and fix every mismatch.
 
 ## 10. Git
 
