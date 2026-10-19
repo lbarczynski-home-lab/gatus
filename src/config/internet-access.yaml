@@ -1,3 +1,4 @@
+# lint-ignore-file: external connectivity probes, not a Docker service
 endpoints:
   - name: google-dns
     group: internet-access
