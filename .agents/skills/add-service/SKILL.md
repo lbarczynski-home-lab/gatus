@@ -61,7 +61,7 @@ Map each included endpoint to one `<type>`:
 | Health of one dependency `<dep>` (db, redis, …) | `<dep>-health` |
 | No health endpoint exists → monitor `https://<public_domain>/` | `health` |
 
-If two endpoints map to the same `<type>`, keep the one used by `docker_healthcheck_test`; otherwise the one listed first in the official docs.
+If two endpoints map to the same `<type>`, keep the one that returns JSON, because it allows precise conditions. If both or neither return JSON, keep the one used by `docker_healthcheck_test`; otherwise the one listed first in the official docs.
 
 ## 5. Conditions
 
@@ -70,10 +70,11 @@ If two endpoints map to the same `<type>`, keep the one used by `docker_healthch
 2. Body condition(s) — take the first rule that matches the real response from `curl`:
    1. JSON with a documented status field → `"[BODY].<field> == <value>"`, value exactly as returned.
    2. JSON with documented health booleans → one `"[BODY].<field> == true|false"` per boolean.
-   3. Short plain-text body → `"[BODY] == <exact raw body>"` (keep any quotes that are part of the body, escaped as `\"`).
-   4. HTML → `"[BODY] == pat(*<title>...</title>*)"` with the page's exact `<title>`.
-   5. XML → `"[BODY] == pat(*<root-element-name*)"`.
-   6. Empty body → no body condition.
+   3. JSON with neither → `"len([BODY].<version_field>) > 0"` on the field holding the product version. It proves the application answers with real data without depending on feature flags or product edition.
+   4. Short plain-text body → `"[BODY] == <exact raw body>"` (keep any quotes that are part of the body, escaped as `\"`).
+   5. HTML → `"[BODY] == pat(*<title>...</title>*)"` with the page's exact `<title>`.
+   6. XML → `"[BODY] == pat(*<root-element-name*)"`.
+   7. Empty body → no body condition.
 3. `"[CERTIFICATE_EXPIRATION] > 48h"` — leaves two days to react when certificate renewal fails.
 
 **Container check** (`<component_name>-container-status`): exactly the three conditions from the template. It explains *why* an external check failed (stopped vs. unhealthy container).
