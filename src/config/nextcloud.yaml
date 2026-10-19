@@ -33,6 +33,15 @@ endpoints:
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts: *alerts
 
+  - name: nextcloud-office-discovery-status
+    group: nextcloud
+    url: "https://office.xbhl.online/hosting/discovery"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
   - name: nextcloud-office-container-status
     group: nextcloud
     url: "http://cloud.vm.xbhl.intranet:2375/containers/collabora/json"
