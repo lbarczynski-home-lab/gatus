@@ -1,27 +1,14 @@
 services:
   gatus:
-    image: ghcr.io/twin/gatus:${GATUS_VERSION}
+    image: ghcr.io/twin/gatus:v5.37.0
     container_name: gatus
     hostname: gatus.ctr.xbhl.intranet
-    environment:
-      - GATUS_DOMAIN=${GATUS_DOMAIN:?err}
-      - GATUS_CONFIG_PATH=/config
-      - GATUS_LOG_LEVEL=INFO
-      - POSTGRES_DB=${POSTGRES_DB:?err}
-      - POSTGRES_USER=${POSTGRES_USER:?err}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
-      - GITLAB_STATUS_TOKEN=${GITLAB_STATUS_TOKEN:?err}
-      - OPEN_WEBUI_AUTH_TOKEN=${OPEN_WEBUI_AUTH_TOKEN:?err}
-      - TAUTULLI_API_KEY=${TAUTULLI_API_KEY:?err}
-      - PVE_API_TOKEN=${PVE_API_TOKEN:?err}
-      - PBS_API_TOKEN=${PBS_API_TOKEN:?err}
-      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:?err}
-      - SMTP_HOST=${SMTP_HOST:?err}
-      - SMTP_PORT=${SMTP_PORT:?err}
-      - SMTP_USERNAME=${SMTP_USERNAME:?err}
-      - SMTP_PASSWORD=${SMTP_PASSWORD:?err}
-      - SMTP_FROM=${SMTP_FROM:?err}
-      - SMTP_TO=${SMTP_TO:?err}
+    env_file:
+      - env/gatus.env
+      - env/db.env
+      - env/service-tokens.env
+      - env/discord.env
+      - env/smtp.env
     volumes:
       - ./config:/config
       - ./bin:/bin:ro
@@ -29,7 +16,7 @@ services:
       - internal
       - proxy
     ports:
-      - "${GATUS_PORT:?err}:8080"
+      - "12441:8080"
     healthcheck:
       test: [ "CMD", "/bin/busybox", "wget", "--quiet", "--spider", "http://127.0.0.1:8080/health" ]
       interval: 15s
@@ -37,7 +24,7 @@ services:
       retries: 5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.gatus-router.rule=Host(`${GATUS_DOMAIN:?err}`)"
+      - "traefik.http.routers.gatus-router.rule=Host(`status.intranet.xbhl.online`)"
       - "traefik.http.routers.gatus-router.entrypoints=websecure"
       - "traefik.http.routers.gatus-router.tls=true"
       - "traefik.http.routers.gatus-router.service=gatus"
@@ -55,10 +42,8 @@ services:
     image: postgres:18.4
     volumes:
       - db:/var/lib/postgresql
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB:?err}
-      - POSTGRES_USER=${POSTGRES_USER:?err}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
+    env_file:
+      - env/db.env
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 5s
