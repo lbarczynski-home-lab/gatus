@@ -35,16 +35,7 @@ endpoints:
       - "[DNS_RCODE] == NOERROR"
     alerts: *alerts
 
-  - name: verify-adguard-container-status
-    group: adguard
-    url: "http://dns.vm.xbhl.intranet:2375/containers/adguard/json"
-    interval: 30s
-    conditions:
-      - "[STATUS] == 200"
-      - "[BODY].State.Running == true"
-      - "[BODY].State.Health.Status == healthy"
-
-  - name: verify-adguard-domain
+  - name: adguard-health-status
     group: adguard
     url: "https://adguard.intranet.xbhl.online"
     interval: 30s
@@ -52,3 +43,12 @@ endpoints:
       - "[STATUS] == 200"
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts: *alerts
+
+  - name: adguard-container-status
+    group: adguard
+    url: "http://dns.vm.xbhl.intranet:2375/containers/adguard/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
