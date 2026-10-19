@@ -12,8 +12,18 @@ endpoints:
       - "[BODY].status == true"
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts: *alerts
-      
-  - name: open-webui-query-models
+
+  - name: open-webui-db-health-status
+    group: open-webui
+    url: "https://ai.intranet.xbhl.online/health/db"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].status == true"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: open-webui-models-status
     group: open-webui
     url: "https://ai.intranet.xbhl.online/api/models"
     interval: 30s
@@ -21,8 +31,9 @@ endpoints:
       Authorization: "Bearer ${OPEN_WEBUI_AUTH_TOKEN}"
     conditions:
       - "[STATUS] == 200"
-      - "len([BODY].data) > 0" # there is any model avaliable
+      - "len([BODY].data) > 0"
       - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
 
   - name: open-webui-container-status
     group: open-webui
