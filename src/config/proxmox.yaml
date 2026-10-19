@@ -1,3 +1,4 @@
+# lint-ignore-file: Proxmox hosts are not Docker containers; checks are hand-written
 alerts: &alerts
   - type: discord
   - type: email
