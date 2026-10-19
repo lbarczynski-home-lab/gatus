@@ -3,7 +3,17 @@ alerts: &alerts
   - type: email
 
 endpoints:
-  - name: litellm-health-status
+  - name: litellm-liveness-status
+    group: litellm
+    url: "https://llm.ai.intranet.xbhl.online/health/liveness"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == \"I'm alive!\""
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: litellm-readiness-status
     group: litellm
     url: "https://llm.ai.intranet.xbhl.online/health/readiness"
     interval: 30s
