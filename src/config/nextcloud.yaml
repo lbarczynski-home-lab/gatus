@@ -39,6 +39,7 @@ endpoints:
     interval: 30s
     conditions:
       - "[STATUS] == 200"
+      - "[BODY] == pat(*<wopi-discovery*)"
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts: *alerts
 
