@@ -1,15 +1,18 @@
+# One file per group: src/config/<group_name>.yaml
+# Providers: every key under `alerting:` in src/config/global.yaml, in the same order.
 alerts: &alerts
-  - type: discord
-  - type: email
+  - type: <alert_provider_1>
+  - type: <alert_provider_2>
 
 endpoints:
+  # Repeat per component: external checks (one per health endpoint), then the container check.
   - name: <component_name>-<type>-status
     group: <group_name>
-    url: "https://<public_domain>/<status_endpoint>"
+    url: "https://<public_domain>/<health_endpoint_path>"
     interval: 30s
     conditions:
       - "[STATUS] == 200"
-      - "[BODY].status == ok"
+      - "<body_condition>"
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts: *alerts
 

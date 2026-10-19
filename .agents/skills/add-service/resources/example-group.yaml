@@ -1,0 +1,72 @@
+# Fictional worked example (not a real service) showing every rule at once:
+# - group `example-app` from repo ../example-app with two deployments in its .gitlab-ci.yml:
+#     1st: container `example-app`  on app.vm.xbhl.intranet, domain example-app.intranet.xbhl.online
+#     2nd: container `example-jobs` (service-name `worker`) on the same VM, domain example-worker.intranet.xbhl.online
+# - component names: 1st deployment -> `example-app` (= group), 2nd -> `example-app-worker`
+# - health, readiness and a dependency check ordered by the type order, container check last
+# - a token-protected endpoint using the header form
+# - a non-JSON endpoint validated with pat()
+alerts: &alerts
+  - type: discord
+  - type: email
+
+endpoints:
+  - name: example-app-health-status
+    group: example-app
+    url: "https://example-app.intranet.xbhl.online/healthz"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == OK"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: example-app-readiness-status
+    group: example-app
+    url: "https://example-app.intranet.xbhl.online/api/ready"
+    interval: 30s
+    headers:
+      Authorization: "Bearer ${EXAMPLE_APP_MONITORING_TOKEN}"
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].status == ready"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: example-app-db-health-status
+    group: example-app
+    url: "https://example-app.intranet.xbhl.online/api/health/db"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].connected == true"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: example-app-container-status
+    group: example-app
+    url: "http://app.vm.xbhl.intranet:2375/containers/example-app/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
+
+  - name: example-app-worker-health-status
+    group: example-app
+    url: "https://example-worker.intranet.xbhl.online/"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == pat(*<title>Example Worker</title>*)"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: example-app-worker-container-status
+    group: example-app
+    url: "http://app.vm.xbhl.intranet:2375/containers/example-jobs/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"

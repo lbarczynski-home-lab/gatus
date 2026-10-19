@@ -1,114 +1,141 @@
 ---
 name: add-service
 description: >-
-  Adds or updates a monitored service group configuration in Gatus. Use this
-  skill when the user asks to add, configure, update, or audit monitoring and
-  healthchecks for a service or thematic service group in Gatus.
+  Adds, updates or audits Gatus monitoring for a Docker-hosted homelab service:
+  discovers the deployment, picks health endpoints, writes src/config/<group>.yaml,
+  wires tokens into env/CI, validates and commits. Use it whenever the user wants
+  a service monitored, added to Gatus or the status page, its healthchecks fixed
+  or aligned, or all checks audited — including Polish requests like "dodaj X do
+  gatusa", "monitoruj X", "popraw healthchecki X", "zrób audyt monitoringu".
 ---
 
-# Add or Update Monitored Service in Gatus
+# Add, Update or Audit Gatus Service Monitoring
 
-## 1. Conceptual Model & File Structure
-Monitoring is organized around thematic service groups so the Gatus dashboard shows at a glance whether an entire ecosystem is healthy, while individual checks pinpoint the root cause of failures.
+Every rule below has exactly one outcome. When a rule does not cover a situation, stop and ask the user instead of choosing — two runs on the same service must produce the same file.
 
-- **`<group_name>`**: Thematic service group and ecosystem identifier (lowercase `kebab-case`, e.g., `gitlab`, `nextcloud`, `home-assistant`).
-  - Defines the configuration file path: `src/config/<group_name>.yaml` (one group == one file).
-  - Defines the `group: <group_name>` field on every endpoint inside that file.
-- **`<component_name>`**: Logical component within the group (lowercase `kebab-case`).
-  - For single-component services, `<component_name>` equals `<group_name>` (e.g., `searxng`, `litellm`).
-  - For multi-component groups, each sub-service has its own `<component_name>` within the same `<group_name>` file (e.g., in `nextcloud.yaml`: `nextcloud` and `nextcloud-office`; in `home-assistant.yaml`: `home-assistant`, `zigbee2mqtt`, `mqtt-broker`).
-- **`<container_name>`**: Exact Docker container name on the target host used in the Docker API URL (defaults to `<component_name>`, but may differ, e.g., `openwebui` for `open-webui`, `collabora` for `nextcloud-office`).
+All examples use the fictional `example-app`. A complete worked example is in [example-group.yaml](./resources/example-group.yaml); the bare structure is in [service-template.yaml](./resources/service-template.yaml).
 
-Refer to:
-- [service-template.yaml](./resources/service-template.yaml) for the base YAML structure.
-- `src/config/gitlab.yaml` for a service with multiple healthcheck endpoints (`/-/health`, `/-/liveness`, `/-/readiness`).
-- `src/config/nextcloud.yaml` for a multi-component thematic group (`nextcloud` + `collabora`).
+## 1. Scope
 
-## 2. Homelab Domain Architecture
-All domains follow a strict hierarchy:
+This skill covers **Docker containers** reachable through the Docker API on `<vm_hostname>:2375`. For anything else (hypervisors, DNS resolution, ICMP, network devices, a container replicated on several hosts) stop and tell the user it is outside this skill — those checks are written by hand and this skill's rules would distort them.
 
-| Tier | Pattern | Routing & Purpose | Examples |
-| :--- | :--- | :--- | :--- |
-| **Public External** | `<service>.xbhl.online` | Exposed via Cloudflare Tunnel | `auth.xbhl.online`, `nextcloud.xbhl.online`, `office.xbhl.online` |
-| **Intranet Standard** | `<service>.intranet.xbhl.online` | Routed via per-VM Traefik with Let's Encrypt TLS | `gitlab.intranet.xbhl.online`, `search.intranet.xbhl.online` |
-| **Intranet Grouped** | `<service>.<scope>.intranet.xbhl.online` | Scoped wildcard subdomains (`*.ai`, `*.ha`, `*.nas`, `*.proxy`) | `llm.ai.intranet.xbhl.online`, `zigbee2mqtt.ha.intranet.xbhl.online`, `media.proxy.intranet.xbhl.online` |
-| **Infrastructure VM** | `<vm_name>.vm.xbhl.intranet` | Virtual machines exposing Docker API on `:2375` | `code.vm.xbhl.intranet`, `infrastructure.vm.xbhl.intranet`, `media.vm.xbhl.intranet`, `ha.vm.xbhl.intranet` |
-| **Infrastructure Server** | `<srv_name>.srv.xbhl.intranet` | Physical/NAS hosts exposing Docker API on `:2375` | `nas.srv.xbhl.intranet`, `pve01.srv.xbhl.intranet` |
-| **Container Direct IP** | `<ctr_name>.ctr.xbhl.intranet` | Containers bound to dedicated intranet IPs | `gitlab.ctr.xbhl.intranet`, `gatus.ctr.xbhl.intranet` |
+A group file that contains only out-of-scope checks starts with `# lint-ignore-file: <reason>`, so the linter skips its endpoint rules. Never add this marker to a file that monitors an in-scope container.
 
-## 3. Discovery & Fail-Fast Container Verification
-Before asking the user for missing parameters (`<group_name>`, `<component_name>`, `<container_name>`, `<public_domain>`, `<vm_hostname>`):
+Required tools: `curl`, `jq`, `yq` (mikefarah).
 
-1. Inspect the target service's local repository if available under `../<service>` (check `.gitlab-ci.yml` and `docker-compose.yml` for `vm-hostname`, `cloudflare-dns-entry-name`, `container-name`, and `healthcheck`).
-2. Run the helper script to locate and inspect the container via Docker API:
-   ```bash
-   ./.agents/skills/add-service/scripts/inspect-service.sh <container_name> [vm_hostname]
-   ```
-3. **Mandatory Docker `HEALTHCHECK` Rule (Fail-Fast)**:
-   - Every monitored container **must** have a Docker `HEALTHCHECK` configured (`.State.Health != null`).
-   - If `inspect-service.sh` exits with code `2` (missing `.State.Health`), **stop immediately and report an error to the user** stating that the container lacks a Docker `HEALTHCHECK` and must have one configured before adding Gatus monitoring.
-4. If the container or public domain cannot be auto-discovered, ask the user for the missing values.
+## 2. Terms
 
-## 4. Healthcheck Endpoint Discovery
-- Check `docker_healthcheck_test` from `inspect-service.sh` and search the web for the official documentation of the service to identify all available health, status, liveness, and readiness endpoints and their response schemas.
-- If a component exposes multiple healthcheck endpoints (like GitLab or LiteLLM), implement external checks for **all** of them.
+| Term | Meaning | Rule |
+| :--- | :--- | :--- |
+| `<group_name>` | Dashboard group = file `src/config/<group_name>.yaml` | Update mode: the group of the file that already holds this container's check. New service: the service repo's directory name. |
+| `<component_name>` | One container inside the group | 1st deployment in the repo's `.gitlab-ci.yml` → `<group_name>`. Each next deployment → `<group_name>-<service-name>` (kebab-case; if `service-name` already starts with `<group_name>`, use `service-name` as is). |
+| `<container_name>` | Docker container name | `container-name` of that deployment. |
+| `<vm_hostname>` | Docker host | `vm-hostname` of that deployment. |
+| `<public_domain>` | Domain used by external checks | `cloudflare-dns-entry-name` of that deployment. It is the one name the deployment pipeline guarantees; Traefik aliases are ignored. |
 
-## 5. Required Checks & Naming Conventions
-For **each component** in `<group_name>`, configure:
+All names are lowercase kebab-case. In update mode, existing names of components, endpoints and tokens that already satisfy these rules are kept.
 
-1. **External Status Check(s)**:
-   - `name`: `<component_name>-<type>-status` (e.g., `<component_name>-health-status`, `<component_name>-liveness-status`, `<component_name>-readiness-status`, `<component_name>-connection-status`)
-   - `group`: `<group_name>`
-   - `url`: `"https://<public_domain>/<status_endpoint>"`
-   - `interval`: `30s`
-   - `alerts`: `*alerts`
-2. **Container Status Check**:
-   - `name`: `<component_name>-container-status`
-   - `group`: `<group_name>`
-   - `url`: `"http://<vm_hostname>:2375/containers/<container_name>/json"`
-   - `interval`: `30s`
-   - Do **not** attach `alerts: *alerts`.
+Domain tiers (for orientation only): `<app>.xbhl.online` (public, Cloudflare Tunnel), `<app>.intranet.xbhl.online` and `<app>.<scope>.intranet.xbhl.online` (intranet, Traefik + Let's Encrypt), `<host>.vm.xbhl.intranet` / `<host>.srv.xbhl.intranet` (Docker hosts).
 
-## 6. Expected Conditions
-- **External status check(s)**:
-  - `"[STATUS] == 200"`
-  - Response body condition(s) validating the payload (e.g., `"[BODY].status == ok"`, `"[BODY].status == healthy"`, `"[BODY] == OK"`, `"len([BODY].data) > 0"`)
-  - `"[CERTIFICATE_EXPIRATION] > 48h"`
-- **Container status check** (all three conditions are mandatory):
-  - `"[STATUS] == 200"`
-  - `"[BODY].State.Running == true"`
-  - `"[BODY].State.Health.Status == healthy"`
+## 3. Discovery
 
-## 7. Alerts Configuration
-- Read `src/config/global.yaml` under `alerting:` and list all configured alert providers in the `alerts: &alerts` anchor at the top of `src/config/<group_name>.yaml`:
-  ```yaml
-  alerts: &alerts
-    - type: discord
-    - type: email
-  ```
-- If new alert providers are added to `src/config/global.yaml`, include them in `alerts: &alerts`.
-- Attach `alerts: *alerts` **only** to external domain checks.
+Run these in order:
 
-## 8. Authentication Tokens
-If an endpoint requires an authentication token or API key:
-1. Reference it as `${TOKEN_NAME}` in `src/config/<group_name>.yaml` (use `<COMPONENT_UPPER>_STATUS_TOKEN`, `<COMPONENT_UPPER>_API_KEY`, or `<COMPONENT_UPPER>_AUTH_TOKEN`).
-2. Append `TOKEN_NAME=PLACEHOLDER` to `src/env/service-tokens.env`.
-3. Add an explicit substitution line under `# service tokens` in `.gitlab-ci.yml`:
+1. `./.agents/skills/add-service/scripts/find-deployments.sh <service>` — reads every sibling repo's `.gitlab-ci.yml` and prints deployments (`repo`, `service_name`, `container_name`, `vm_hostname`, `domain`). Every deployment in the matching repo is one component, in file order.
+   - No match → run step 2 without `vm_hostname`; if it prints candidates, ask the user which one. If there is nothing, ask the user for `<container_name>`, `<vm_hostname>` and `<public_domain>`.
+   - Same `container_name` on several hosts → out of scope (section 1).
+2. For each component: `./.agents/skills/add-service/scripts/inspect-service.sh <container_name> <vm_hostname>`
+
+   | Exit | Meaning | Action |
+   | :--- | :--- | :--- |
+   | 0 | Found, healthcheck present | Continue. |
+   | 2 | No Docker `HEALTHCHECK` | Stop. Tell the user the container needs a healthcheck first (the container check asserts `State.Health.Status == healthy`, which can never pass without one) and offer to add it to `../<repo>/docker-compose.yml`. |
+   | 3 | Not found | Show the printed candidates and ask the user. |
+   | 4 | Found on several hosts | Out of scope (section 1). |
+
+## 4. Choosing Health Endpoints
+
+Sources, in this order: (1) the HTTP path in `docker_healthcheck_test`, (2) files in `../<repo>/`, (3) the service's official documentation.
+
+Include an endpoint only if it is built for health monitoring **and** is reachable at `https://<public_domain>/...`. Exclude business/API data endpoints and metrics endpoints. Endpoints reachable only on the container's internal port are already covered by the Docker healthcheck behind the container check.
+
+Map each included endpoint to one `<type>`:
+
+| Endpoint purpose | `<type>` |
+| :--- | :--- |
+| Generic health / status / ping / alive | `health` |
+| Liveness | `liveness` |
+| Readiness | `readiness` |
+| Health of one dependency `<dep>` (db, redis, …) | `<dep>-health` |
+| No health endpoint exists → monitor `https://<public_domain>/` | `health` |
+
+If two endpoints map to the same `<type>`, keep the one used by `docker_healthcheck_test`; otherwise the one listed first in the official docs.
+
+## 5. Conditions
+
+**External check** (`<component_name>-<type>-status`), in this order:
+1. `"[STATUS] == 200"`
+2. Body condition(s) — take the first rule that matches the real response from `curl`:
+   1. JSON with a documented status field → `"[BODY].<field> == <value>"`, value exactly as returned.
+   2. JSON with documented health booleans → one `"[BODY].<field> == true|false"` per boolean.
+   3. Short plain-text body → `"[BODY] == <exact raw body>"` (keep any quotes that are part of the body, escaped as `\"`).
+   4. HTML → `"[BODY] == pat(*<title>...</title>*)"` with the page's exact `<title>`.
+   5. XML → `"[BODY] == pat(*<root-element-name*)"`.
+   6. Empty body → no body condition; add `# lint-ignore: body-condition empty response body` to the `- name:` line.
+3. `"[CERTIFICATE_EXPIRATION] > 48h"` — leaves two days to react when certificate renewal fails.
+
+**Container check** (`<component_name>-container-status`): exactly the three conditions from the template. It explains *why* an external check failed (stopped vs. unhealthy container).
+
+Both checks use `interval: 30s`.
+
+## 6. Alerts
+
+The `alerts: &alerts` anchor at the top of the file lists every key under `alerting:` in `src/config/global.yaml`, in that order. Only external checks get `alerts: *alerts`: they represent user-visible outage. The container check stays silent because it fails together with the external check and would only double every notification.
+
+## 7. Authentication Tokens
+
+When an endpoint needs a credential:
+1. Variable name: `<COMPONENT_NAME_UPPER_SNAKE>_MONITORING_TOKEN` (`example-app` → `EXAMPLE_APP_MONITORING_TOKEN`). Existing token variables keep their names — renaming them would break the GitLab CI/CD variables.
+2. Send it in a header if the service accepts header auth, otherwise as the query parameter the service documents.
+3. Append `<VAR>=PLACEHOLDER` at the end of `src/env/service-tokens.env`.
+4. Append at the end of the `# service tokens` block in `.gitlab-ci.yml`:
    ```yaml
-   - sed -i "s|^TOKEN_NAME=.*|TOKEN_NAME=${TOKEN_NAME}|" $BUILD_ARTIFACTS_DIR/env/service-tokens.env
+   - sed -i "s|^<VAR>=.*|<VAR>=${<VAR>}|" $BUILD_ARTIFACTS_DIR/env/service-tokens.env
    ```
 
-## 9. Validation Steps
-Before finishing:
-1. Test unauthenticated external endpoints and the Docker API endpoint with `curl` to confirm HTTP status and JSON body structure match the configured `conditions`.
-2. If a token was added, verify that `TOKEN_NAME` is present in `src/config/<group_name>.yaml`, `src/env/service-tokens.env`, and `.gitlab-ci.yml`, and remind the user to add `TOKEN_NAME` in GitLab CI/CD Variables.
+## 8. File Layout
 
-## 10. Git Workflow (Branch Name & Commit Message)
-- **Never commit directly to `main`**: Always create and switch to a feature branch before making commits.
-- **Atomicity**: One service group (`src/config/<group_name>.yaml`) == one commit.
-- **Branch naming**:
-  - New service monitoring: `feat/<group_name>-monitoring`
-  - Updating/fixing checks: `feat/<group_name>-healthchecks` or `fix/<group_name>-healthchecks`
-- **Commit message format** (Conventional Commits):
-  - Adding a new service group: `feat(monitoring): add <group_name> service monitoring`
-  - Modifying an existing service group: `feat(<group_name>): <short description>` or `fix(<group_name>): <short description>`
+- Endpoint order: components in discovery order; within a component, external checks by `<type>` order `health`, `liveness`, `readiness`, then `<dep>-health` alphabetically; the container check last.
+- Field order: `name`, `group`, `url`, `interval`, `headers`, `conditions`, `alerts`.
+
+**Update / audit mode** (the file already exists):
+- Endpoints outside this skill's scope (section 1) stay unchanged, at the top of `endpoints:`, in their original order. Existing `# lint-ignore:` comments stay.
+- Standard endpoints are rebuilt with sections 4–8. An endpoint name that breaks the naming rules is renamed. Gatus stores history per group + name, so a rename drops that endpoint's history — list every rename in the final report.
+- An audit of all groups is this procedure repeated for each `src/config/*.yaml` except `global.yaml`.
+
+## 9. Validation
+
+1. `curl` every external URL without a token and confirm the status and body match the written conditions. Token-protected URLs cannot be tested locally; list them in the report.
+2. `./.agents/skills/add-service/scripts/lint-config.sh src/config/<group_name>.yaml` must print `OK`. It enforces sections 5–8 mechanically, so fix the config rather than adding `lint-ignore`; the only allowed ignore is rule 5.2.6.
+
+## 10. Git
+
+- On `main` → create `feat/<group_name>-monitoring`. On any other branch → commit there.
+- One commit per group file, including its `service-tokens.env` and `.gitlab-ci.yml` changes.
+- Subject: `feat(monitoring): add <group_name> monitoring` for a new file, `feat(monitoring): update <group_name> monitoring` for an existing one.
+- Body: one line per touched endpoint, `- <add|change|remove|rename> <endpoint-name>: <what changed>`.
+- Do not push.
+
+## 11. Final Report
+
+End with exactly this structure:
+
+```
+## <group_name> monitoring
+Endpoints: <list with add/change/remove/rename>
+Verified with curl: <endpoint → status/body OK>
+Not verified (token): <endpoints or "none">
+History lost (renamed): <old → new or "none">
+Action required: <e.g. "set <VAR> in GitLab CI/CD variables (masked)" or "none">
+Commit: <hash> on <branch>
+```
