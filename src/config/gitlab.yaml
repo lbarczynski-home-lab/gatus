@@ -3,16 +3,6 @@ alerts: &alerts
   - type: email
 
 endpoints:
-  - name: gitlab-health-status
-    group: gitlab
-    url: "https://gitlab.intranet.xbhl.online/-/health?token=${GITLAB_STATUS_TOKEN}"
-    interval: 30s
-    conditions:
-      - "[STATUS] == 200"
-      - "[BODY] == GitLab OK"
-      - "[CERTIFICATE_EXPIRATION] > 48h"
-    alerts: *alerts
-
   - name: gitlab-liveness-status
     group: gitlab
     url: "https://gitlab.intranet.xbhl.online/-/liveness?token=${GITLAB_STATUS_TOKEN}"
