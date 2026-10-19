@@ -3,11 +3,21 @@ alerts: &alerts
   - type: email
 
 endpoints:
-  - name: authelia-health
+  - name: authelia-health-status
     group: authelia
     url: "https://auth.xbhl.online/api/health"
     interval: 30s
     conditions:
       - "[STATUS] == 200"
       - "[BODY].status == OK"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts: *alerts
+
+  - name: authelia-container-status
+    group: authelia
+    url: "http://nas.srv.xbhl.intranet:2375/containers/authelia/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
