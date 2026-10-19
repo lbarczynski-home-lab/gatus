@@ -29,17 +29,7 @@ endpoints:
     interval: 30s
     conditions:
       - "[STATUS] == 200"
-      - "[BODY].hasMobileSupport == true"
-      - "[CERTIFICATE_EXPIRATION] > 48h"
-    alerts: *alerts
-
-  - name: nextcloud-office-discovery-status
-    group: nextcloud
-    url: "https://office.xbhl.online/hosting/discovery"
-    interval: 30s
-    conditions:
-      - "[STATUS] == 200"
-      - "[BODY] == pat(*<wopi-discovery*)"
+      - "len([BODY].productVersion) > 0"
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts: *alerts
 
