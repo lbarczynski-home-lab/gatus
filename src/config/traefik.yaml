@@ -1,4 +1,3 @@
-# lint-ignore-file: Traefik runs on every Docker host; checks are hand-written per host
 alerts: &alerts
   - type: discord
   - type: email
