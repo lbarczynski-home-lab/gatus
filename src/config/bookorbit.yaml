@@ -1,0 +1,23 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
+endpoints:
+  - name: bookorbit-health-status
+    group: bookorbit
+    url: "https://read.intranet.xbhl.online/api/v1/health"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].status == ok"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: bookorbit-container-status
+    group: bookorbit
+    url: "http://media.vm.xbhl.intranet:2375/containers/bookorbit/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
