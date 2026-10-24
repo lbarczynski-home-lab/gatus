@@ -5,8 +5,7 @@ description: >-
   discovers the deployment, picks health endpoints, writes src/config/<group>.yaml,
   wires tokens into env/CI, validates and commits. Use it whenever the user wants
   a service monitored, added to Gatus or the status page, its healthchecks fixed
-  or aligned, or all checks audited — including Polish requests like "dodaj X do
-  gatusa", "monitoruj X", "popraw healthchecki X", "zrób audyt monitoringu".
+  or aligned, or all checks audited (e.g. "add X to Gatus", "monitor X", "fix healthchecks for X", "audit monitoring").
 ---
 
 # Add, Update or Audit Gatus Service Monitoring
