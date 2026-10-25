@@ -14,7 +14,7 @@ endpoints:
 
   - name: homepage-container-status
     group: homepage
-    url: "http://nas.srv.xbhl.intranet:2375/containers/homepage/json"
+    url: "http://docker-socket-proxy:2375/containers/homepage/json"
     interval: 30s
     conditions:
       - "[STATUS] == 200"

@@ -15,6 +15,7 @@ services:
     networks:
       - internal
       - proxy
+      - socket-proxy
     ports:
       - "12441:8080"
     healthcheck:
@@ -61,4 +62,7 @@ networks:
   internal:
 
   proxy:
+    external: true
+
+  socket-proxy:
     external: true

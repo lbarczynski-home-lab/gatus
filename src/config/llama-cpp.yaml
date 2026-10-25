@@ -15,7 +15,7 @@ endpoints:
 
   - name: llama-cpp-container-status
     group: llama-cpp
-    url: "http://nas.srv.xbhl.intranet:2375/containers/llama-cpp/json"
+    url: "http://docker-socket-proxy:2375/containers/llama-cpp/json"
     interval: 30s
     conditions:
       - "[STATUS] == 200"
