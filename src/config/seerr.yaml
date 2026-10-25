@@ -5,7 +5,7 @@ alerts: &alerts
 endpoints:
   - name: seerr-connection-status
     group: seerr
-    url: "https://requests.intranet.xbhl.online/api/v1/status"
+    url: "https://seerr.intranet.xbhl.online/api/v1/status"
     interval: 30s
     conditions:
       - "[STATUS] == 200"
@@ -15,7 +15,7 @@ endpoints:
 
   - name: seerr-appdata-status
     group: seerr
-    url: "https://requests.intranet.xbhl.online/api/v1/status/appdata"
+    url: "https://seerr.intranet.xbhl.online/api/v1/status/appdata"
     interval: 30s
     conditions:
       - "[STATUS] == 200"
