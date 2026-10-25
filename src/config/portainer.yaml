@@ -55,4 +55,4 @@ endpoints:
 
   - name: portainer-agent-nas-container-status
     <<: *portainer-container-status-template
-    url: "http://nas.srv.xbhl.intranet:2375/containers/portainer-agent/json"
+    url: "http://docker-socket-proxy:2375/containers/portainer-agent/json"
