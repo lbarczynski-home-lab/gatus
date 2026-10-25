@@ -13,9 +13,9 @@ services:
       - ./config:/config
       - ./bin:/bin:ro
     networks:
-      - internal
       - proxy
       - socket-proxy
+      - internal
     ports:
       - "12441:8080"
     healthcheck:
@@ -60,6 +60,7 @@ volumes:
 
 networks:
   internal:
+    internal: true
 
   proxy:
     external: true
