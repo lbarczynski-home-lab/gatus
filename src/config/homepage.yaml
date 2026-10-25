@@ -1,0 +1,22 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
+endpoints:
+  - name: homepage-health-status
+    group: homepage
+    url: "https://start.intranet.xbhl.online/api/healthcheck"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: homepage-container-status
+    group: homepage
+    url: "http://nas.srv.xbhl.intranet:2375/containers/homepage/json"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].State.Running == true"
+      - "[BODY].State.Health.Status == healthy"
