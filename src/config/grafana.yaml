@@ -51,37 +51,37 @@ endpoints:
     <<: *grafana-container-status-template
     url: "http://infrastructure.vm.xbhl.intranet:2375/containers/loki/json"
 
-  - name: node-exporter-infrastructure-container-status
+  - name: alloy-infrastructure-container-status
     <<: *grafana-container-status-template
-    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/node-exporter/json"
+    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/alloy/json"
 
-  - name: node-exporter-dns-container-status
+  - name: alloy-dns-container-status
     <<: *grafana-container-status-template
-    url: "http://dns.vm.xbhl.intranet:2375/containers/node-exporter/json"
+    url: "http://dns.vm.xbhl.intranet:2375/containers/alloy/json"
 
-  - name: node-exporter-networking-container-status
+  - name: alloy-networking-container-status
     <<: *grafana-container-status-template
-    url: "http://networking.vm.xbhl.intranet:2375/containers/node-exporter/json"
+    url: "http://networking.vm.xbhl.intranet:2375/containers/alloy/json"
 
-  - name: node-exporter-cloud-container-status
+  - name: alloy-cloud-container-status
     <<: *grafana-container-status-template
-    url: "http://cloud.vm.xbhl.intranet:2375/containers/node-exporter/json"
+    url: "http://cloud.vm.xbhl.intranet:2375/containers/alloy/json"
 
-  - name: node-exporter-media-container-status
+  - name: alloy-media-container-status
     <<: *grafana-container-status-template
-    url: "http://media.vm.xbhl.intranet:2375/containers/node-exporter/json"
+    url: "http://media.vm.xbhl.intranet:2375/containers/alloy/json"
 
-  - name: node-exporter-code-container-status
+  - name: alloy-code-container-status
     <<: *grafana-container-status-template
-    url: "http://code.vm.xbhl.intranet:2375/containers/node-exporter/json"
+    url: "http://code.vm.xbhl.intranet:2375/containers/alloy/json"
 
-  - name: node-exporter-ha-container-status
+  - name: alloy-ha-container-status
     <<: *grafana-container-status-template
-    url: "http://ha.vm.xbhl.intranet:2375/containers/node-exporter/json"
+    url: "http://ha.vm.xbhl.intranet:2375/containers/alloy/json"
 
-  - name: node-exporter-nas-container-status
+  - name: alloy-nas-container-status
     <<: *grafana-container-status-template
-    url: "http://docker-socket-proxy:2375/containers/node-exporter/json"
+    url: "http://docker-socket-proxy:2375/containers/alloy/json"
 
   - name: cadvisor-infrastructure-container-status
     <<: *grafana-container-status-template
@@ -118,35 +118,3 @@ endpoints:
   - name: nvidia-gpu-exporter-nas-container-status
     <<: *grafana-container-status-template
     url: "http://docker-socket-proxy:2375/containers/nvidia-gpu-exporter/json"
-
-  - name: promtail-infrastructure-container-status
-    <<: *grafana-container-status-template
-    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/promtail/json"
-
-  - name: promtail-dns-container-status
-    <<: *grafana-container-status-template
-    url: "http://dns.vm.xbhl.intranet:2375/containers/promtail/json"
-
-  - name: promtail-networking-container-status
-    <<: *grafana-container-status-template
-    url: "http://networking.vm.xbhl.intranet:2375/containers/promtail/json"
-
-  - name: promtail-cloud-container-status
-    <<: *grafana-container-status-template
-    url: "http://cloud.vm.xbhl.intranet:2375/containers/promtail/json"
-
-  - name: promtail-media-container-status
-    <<: *grafana-container-status-template
-    url: "http://media.vm.xbhl.intranet:2375/containers/promtail/json"
-
-  - name: promtail-code-container-status
-    <<: *grafana-container-status-template
-    url: "http://code.vm.xbhl.intranet:2375/containers/promtail/json"
-
-  - name: promtail-ha-container-status
-    <<: *grafana-container-status-template
-    url: "http://ha.vm.xbhl.intranet:2375/containers/promtail/json"
-
-  - name: promtail-nas-container-status
-    <<: *grafana-container-status-template
-    url: "http://docker-socket-proxy:2375/containers/promtail/json"
