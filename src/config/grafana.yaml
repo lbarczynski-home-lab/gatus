@@ -1,0 +1,152 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
+grafana-container-template: &grafana-container-status-template
+  group: grafana
+  interval: 30s
+  conditions:
+    - "[STATUS] == 200"
+    - "[BODY].State.Running == true"
+    - "[BODY].State.Health.Status == healthy"
+
+endpoints:
+  - name: grafana-health-status
+    group: grafana
+    url: "https://grafana.intranet.xbhl.online/api/health"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].database == ok"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: victoriametrics-health-status
+    group: grafana
+    url: "http://infrastructure.vm.xbhl.intranet:8428/health"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == OK"
+    alerts: *alerts
+
+  - name: loki-readiness-status
+    group: grafana
+    url: "http://infrastructure.vm.xbhl.intranet:3100/ready"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == pat(*ready*)"
+    alerts: *alerts
+
+  - name: grafana-container-status
+    <<: *grafana-container-status-template
+    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/grafana/json"
+
+  - name: victoriametrics-container-status
+    <<: *grafana-container-status-template
+    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/victoriametrics/json"
+
+  - name: loki-container-status
+    <<: *grafana-container-status-template
+    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/loki/json"
+
+  - name: node-exporter-infrastructure-container-status
+    <<: *grafana-container-status-template
+    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/node-exporter/json"
+
+  - name: node-exporter-dns-container-status
+    <<: *grafana-container-status-template
+    url: "http://dns.vm.xbhl.intranet:2375/containers/node-exporter/json"
+
+  - name: node-exporter-networking-container-status
+    <<: *grafana-container-status-template
+    url: "http://networking.vm.xbhl.intranet:2375/containers/node-exporter/json"
+
+  - name: node-exporter-cloud-container-status
+    <<: *grafana-container-status-template
+    url: "http://cloud.vm.xbhl.intranet:2375/containers/node-exporter/json"
+
+  - name: node-exporter-media-container-status
+    <<: *grafana-container-status-template
+    url: "http://media.vm.xbhl.intranet:2375/containers/node-exporter/json"
+
+  - name: node-exporter-code-container-status
+    <<: *grafana-container-status-template
+    url: "http://code.vm.xbhl.intranet:2375/containers/node-exporter/json"
+
+  - name: node-exporter-ha-container-status
+    <<: *grafana-container-status-template
+    url: "http://ha.vm.xbhl.intranet:2375/containers/node-exporter/json"
+
+  - name: node-exporter-nas-container-status
+    <<: *grafana-container-status-template
+    url: "http://docker-socket-proxy:2375/containers/node-exporter/json"
+
+  - name: cadvisor-infrastructure-container-status
+    <<: *grafana-container-status-template
+    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/cadvisor/json"
+
+  - name: cadvisor-dns-container-status
+    <<: *grafana-container-status-template
+    url: "http://dns.vm.xbhl.intranet:2375/containers/cadvisor/json"
+
+  - name: cadvisor-networking-container-status
+    <<: *grafana-container-status-template
+    url: "http://networking.vm.xbhl.intranet:2375/containers/cadvisor/json"
+
+  - name: cadvisor-cloud-container-status
+    <<: *grafana-container-status-template
+    url: "http://cloud.vm.xbhl.intranet:2375/containers/cadvisor/json"
+
+  - name: cadvisor-media-container-status
+    <<: *grafana-container-status-template
+    url: "http://media.vm.xbhl.intranet:2375/containers/cadvisor/json"
+
+  - name: cadvisor-code-container-status
+    <<: *grafana-container-status-template
+    url: "http://code.vm.xbhl.intranet:2375/containers/cadvisor/json"
+
+  - name: cadvisor-ha-container-status
+    <<: *grafana-container-status-template
+    url: "http://ha.vm.xbhl.intranet:2375/containers/cadvisor/json"
+
+  - name: cadvisor-nas-container-status
+    <<: *grafana-container-status-template
+    url: "http://docker-socket-proxy:2375/containers/cadvisor/json"
+
+  - name: nvidia-gpu-exporter-nas-container-status
+    <<: *grafana-container-status-template
+    url: "http://docker-socket-proxy:2375/containers/nvidia-gpu-exporter/json"
+
+  - name: promtail-infrastructure-container-status
+    <<: *grafana-container-status-template
+    url: "http://infrastructure.vm.xbhl.intranet:2375/containers/promtail/json"
+
+  - name: promtail-dns-container-status
+    <<: *grafana-container-status-template
+    url: "http://dns.vm.xbhl.intranet:2375/containers/promtail/json"
+
+  - name: promtail-networking-container-status
+    <<: *grafana-container-status-template
+    url: "http://networking.vm.xbhl.intranet:2375/containers/promtail/json"
+
+  - name: promtail-cloud-container-status
+    <<: *grafana-container-status-template
+    url: "http://cloud.vm.xbhl.intranet:2375/containers/promtail/json"
+
+  - name: promtail-media-container-status
+    <<: *grafana-container-status-template
+    url: "http://media.vm.xbhl.intranet:2375/containers/promtail/json"
+
+  - name: promtail-code-container-status
+    <<: *grafana-container-status-template
+    url: "http://code.vm.xbhl.intranet:2375/containers/promtail/json"
+
+  - name: promtail-ha-container-status
+    <<: *grafana-container-status-template
+    url: "http://ha.vm.xbhl.intranet:2375/containers/promtail/json"
+
+  - name: promtail-nas-container-status
+    <<: *grafana-container-status-template
+    url: "http://docker-socket-proxy:2375/containers/promtail/json"
