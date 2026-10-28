@@ -5,7 +5,7 @@ alerts: &alerts
 endpoints:
   - name: open-webui-health-status
     group: open-webui
-    url: "https://ai.intranet.xbhl.online/health"
+    url: "https://chat.ai.intranet.xbhl.online/health"
     interval: 30s
     conditions:
       - "[STATUS] == 200"
@@ -15,7 +15,7 @@ endpoints:
 
   - name: open-webui-db-health-status
     group: open-webui
-    url: "https://ai.intranet.xbhl.online/health/db"
+    url: "https://chat.ai.intranet.xbhl.online/health/db"
     interval: 30s
     conditions:
       - "[STATUS] == 200"
@@ -25,7 +25,7 @@ endpoints:
 
   - name: open-webui-models-status
     group: open-webui
-    url: "https://ai.intranet.xbhl.online/api/models"
+    url: "https://chat.ai.intranet.xbhl.online/api/models"
     interval: 30s
     headers:
       Authorization: "Bearer ${OPEN_WEBUI_AUTH_TOKEN}"
