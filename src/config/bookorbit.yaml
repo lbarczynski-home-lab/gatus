@@ -5,7 +5,7 @@ alerts: &alerts
 endpoints:
   - name: bookorbit-health-status
     group: bookorbit
-    url: "https://read.intranet.xbhl.online/api/v1/health"
+    url: "https://bookorbit.intranet.xbhl.online/api/v1/health"
     interval: 30s
     conditions:
       - "[STATUS] == 200"
