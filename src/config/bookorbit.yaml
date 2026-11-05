@@ -15,7 +15,7 @@ endpoints:
 
   - name: bookorbit-container-status
     group: bookorbit
-    url: "http://media.vm.xbhl.intranet:2375/containers/bookorbit/json"
+    url: "http://docker-socket-proxy:2375/containers/bookorbit/json"
     interval: 30s
     conditions:
       - "[STATUS] == 200"
