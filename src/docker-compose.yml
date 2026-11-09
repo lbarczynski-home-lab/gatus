@@ -14,7 +14,6 @@ services:
       - ./bin:/bin:ro
     networks:
       - proxy
-      - socket-proxy
       - internal
     ports:
       - "12441:8080"
@@ -63,7 +62,4 @@ networks:
     internal: true
 
   proxy:
-    external: true
-
-  socket-proxy:
     external: true

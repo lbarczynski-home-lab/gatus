@@ -81,7 +81,7 @@ endpoints:
 
   - name: alloy-nas-container-status
     <<: *grafana-container-status-template
-    url: "http://docker-socket-proxy:2375/containers/alloy/json"
+    url: "http://nas.srv.xbhl.intranet:2375/containers/alloy/json"
 
   - name: cadvisor-infrastructure-container-status
     <<: *grafana-container-status-template
@@ -113,8 +113,8 @@ endpoints:
 
   - name: cadvisor-nas-container-status
     <<: *grafana-container-status-template
-    url: "http://docker-socket-proxy:2375/containers/cadvisor/json"
+    url: "http://nas.srv.xbhl.intranet:2375/containers/cadvisor/json"
 
   - name: nvidia-gpu-exporter-nas-container-status
     <<: *grafana-container-status-template
-    url: "http://docker-socket-proxy:2375/containers/nvidia-gpu-exporter/json"
+    url: "http://nas.srv.xbhl.intranet:2375/containers/nvidia-gpu-exporter/json"

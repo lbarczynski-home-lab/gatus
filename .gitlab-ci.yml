@@ -13,11 +13,6 @@ include:
       container-healthcheck-delay: 180
       delete-existing-container-files: true
 
-.preconfigure-run-script:
-  script:
-    - !reference [.base:docker:register-network-helpers, script]
-    - ensure_docker_network "socket-proxy" "bridge"
-
 setup:generate-build-artifacts:
   script:
     - cp -r src/env $BUILD_ARTIFACTS_DIR/
