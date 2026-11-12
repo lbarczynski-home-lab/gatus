@@ -1,5 +1,5 @@
 # Fictional worked example (not a real service) showing every rule at once:
-# - group `example-app` from repo ../example-app with two deployments in its .gitlab-ci.yml:
+# - group `example-app` from repo `home-lab/example-app` with two deployments in its .gitlab-ci.yml:
 #     1st: container `example-app`  on app.vm.xbhl.intranet, domain example-app.intranet.xbhl.online
 #     2nd: container `example-jobs` (service-name `worker`) on the same VM, domain example-worker.intranet.xbhl.online
 # - component names: 1st deployment -> `example-app` (= group), 2nd -> `example-app-worker`
