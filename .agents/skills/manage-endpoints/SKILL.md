@@ -1,16 +1,15 @@
 ---
-name: add-service
+name: manage-endpoints
 description: >-
-  Adds, updates or audits Gatus monitoring for a Docker-hosted homelab service:
-  discovers deployment metadata statically from GitLab or repository files,
-  selects health endpoints, writes src/config/<group>.yaml, wires tokens into
-  src/env/service-tokens.env and .gitlab-ci.yml, validates YAML, pushes a branch,
-  and opens a GitLab Merge Request. Use whenever a service needs to be added to
-  Gatus, updated on the status page, or audited (e.g. "add X to Gatus",
-  "monitor X", "fix healthchecks for X", "audit monitoring").
+  Adds, updates, removes, or audits Gatus monitored endpoints for Docker-hosted
+  homelab services: discovers deployment metadata statically from GitLab or
+  repository files, selects health endpoints, manages src/config/<group>.yaml,
+  wires tokens into src/env/service-tokens.env and .gitlab-ci.yml, validates YAML,
+  pushes a branch, and opens a GitLab Merge Request. Use when asked to add, update,
+  or remove monitored endpoints in Gatus.
 ---
 
-# Add, Update or Audit Gatus Service Monitoring
+# Manage Gatus Monitored Endpoints
 
 Every rule below has a deterministic outcome. When a rule does not cover a situation, stop and ask the user instead of guessing — two runs on the same service must produce the same configuration.
 
@@ -131,6 +130,9 @@ When a monitored endpoint requires authentication:
 - **PostgreSQL History Retention**: Gatus keys historical results in PostgreSQL by `group` + `name`. Renaming either drops all historical uptime data for that endpoint — preserve compliant names and explicitly list any mandatory rename in the final report and MR description.
 - A full audit repeats this procedure across every `src/config/*.yaml` except `global.yaml`.
 
+**Remove mode**:
+- Remove the target endpoint entries from `src/config/<group_name>.yaml` (or run `git -C "<gatus_dir>" rm -f "src/config/<group_name>.yaml"` when decommissioning an entire group), and remove any dedicated `<VAR>` no longer referenced in `src/config/` from `src/env/service-tokens.env` and `.gitlab-ci.yml`.
+
 ## 9. Validation
 
 1. Validate YAML syntax on every modified file (`src/config/<group_name>.yaml`, `.gitlab-ci.yml`) via `yq '.' "<file>" >/dev/null` or `yamllint -d relaxed "<file>"`.
@@ -141,9 +143,9 @@ When a monitored endpoint requires authentication:
 
 1. Resolve `<gatus_dir>` cleanly (explicit prompt path, verified `home-lab/gatus` checkout, or `/tmp/homelab-work/<role>-gatus`) and pass `git -C "<gatus_dir>"` on every Git call:
    - New service monitoring: `git -C "<gatus_dir>" fetch origin main` then `git -C "<gatus_dir>" checkout -B "feat/<group_name>-monitoring" origin/main` (`--label "type::feature"`).
-   - Existing service update: `git -C "<gatus_dir>" fetch origin main` then `git -C "<gatus_dir>" checkout -B "chore/<group_name>-monitoring" origin/main` (`--label "type::feature"` or `"type::fix"` as appropriate).
+   - Existing service update or removal: `git -C "<gatus_dir>" fetch origin main` then `git -C "<gatus_dir>" checkout -B "chore/<group_name>-monitoring" origin/main` (`--label "type::feature"` or `"type::fix"` as appropriate).
 2. Stage and commit one logical commit per group file (bundling its `src/env/service-tokens.env` and `.gitlab-ci.yml` changes):
-   - Subject: `feat(monitoring): add <group_name> monitoring` (new) or `chore(monitoring): update <group_name> monitoring` (existing).
+   - Subject: `feat(monitoring): add <group_name> monitoring` (new), `chore(monitoring): update <group_name> monitoring` (update), or `chore(monitoring): remove <group_name> monitoring` (remove).
    - Body: one line per touched endpoint, `- <add|change|remove|rename> <endpoint-name>: <what changed>`.
 3. Push the branch, write the MR description to `/tmp/homelab-work/mr-desc-gatus-<group_name>.md` via `write_file`, and open the Merge Request targeting `main`:
    ```bash

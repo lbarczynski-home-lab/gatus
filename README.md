@@ -2,72 +2,45 @@
 
 > Version: `v5.38.0` | Images: `ghcr.io/twin/gatus:v5.38.0`, `postgres:18.6` | Upstream: https://github.com/TwiN/gatus
 
-Automated fleet health, certificate expiration, DNS, ICMP, and Docker container state monitor backed by PostgreSQL persistence and Discord/SMTP alerting.
+Automated homelab health, TLS certificate expiration, DNS, ICMP, and Docker container state monitor backed by PostgreSQL persistence and Discord/email alerting.
 
-## Service Overview
+## Overview
 
 | Property | Value |
 | :--- | :--- |
-| **Domain** | `status.intranet.xbhl.online` (plus host port `12441:8080` on `nas.srv.xbhl.intranet`) |
-| **Primary Node** | `nas.srv.xbhl.intranet` (`Physical QNAP Server`) |
-| **Deploy Path** | `/share/Container/services/gatus` |
-| **Ingress Strategy** | Intranet TLS via Traefik (`websecure` -> `gatus:8080` on external `proxy` network; Cloudflare DNS `direct`) + published host port `12441:8080` |
-| **Topology Archetype** | Centralized Fleet Health Monitor (`gatus` + `postgres` sidecar) |
-| **Authentication** | None (publicly readable intranet status dashboard without Authelia middleware or Gatus `security:` block) |
-| **Ecosystem** | WUD tracks `gatus` (`^v\d+\.\d+\.\d+$`; `postgres` sidecar unlabelled); Homepage `Infrastructure` tile (`server: nas`, `container: gatus`, `gatus` widget polling `https://status.intranet.xbhl.online`); monitors 19 service/infrastructure groups in `src/config/*.yaml` (no self-monitoring `gatus.yaml` endpoint); no Authelia OIDC |
+| **Domain** | `status.intranet.xbhl.online` (plus host port `12441:8080`) |
+| **Node** | `nas.srv.xbhl.intranet` |
+| **Ingress** | Intranet TLS via Traefik (`proxy` network) and direct host port `:12441` |
+| **Authentication** | None (publicly readable intranet status dashboard) |
+| **Ecosystem** | WUD SemVer tracking (`gatus`), Homepage status widget, Prometheus `/metrics`, Discord & email alerts |
 
-## Architecture & Communication
+## Architecture & Key Decisions
 
 ```mermaid
 flowchart LR
-    Clients["Intranet Clients & Homepage Widget"] -->|"HTTPS :443"| Traefik["Traefik (proxy network)"]
-    Traefik -->|"HTTP :8080"| Gatus["Gatus (gatus.ctr.xbhl.intranet)"]
+    Clients["Intranet Clients & Homepage"] -->|"HTTPS :443"| Traefik["Traefik (proxy)"] -->|"HTTP :8080"| Gatus["Gatus"]
     HostPort["Host Port (:12441)"] -->|"HTTP :8080"| Gatus
-
-    subgraph Stack["Gatus Compose Stack (nas.srv.xbhl.intranet)"]
-        Gatus -->|"TCP :5432 (internal network)"| Postgres["PostgreSQL 18 (db volume)"]
-        ConfigMount["./config:/config (global + 19 group YAMLs)"] -.-> Gatus
-        BusyboxMount["./bin:/bin:ro (Static BusyBox Healthcheck)"] -.-> Gatus
-    end
-
-    Gatus -->|"HTTPS / TLS Checks"| Services["Homelab & Public Endpoints"]
-    Gatus -->|"HTTP :2375 Container State"| DockerAPI["Fleet Docker Engines"]
-    Gatus -->|"HTTPS :8006 / :8007, DNS, ICMP"| Infra["Proxmox VE/PBS, AdGuard DNS & Upstream DNS"]
-    Gatus -->|"Webhook & SMTP Alerts"| Alerts["Discord & Email"]
+    Gatus -->|"TCP :5432 (internal)"| Postgres["PostgreSQL 18"]
+    Gatus -->|"HTTPS / TLS Probes"| Services["Homelab & Public Endpoints"]
+    Gatus -->|"HTTP :2375 State Probes"| DockerAPI["Fleet Docker Engines"]
+    Gatus -->|"API, DNS & ICMP"| Infra["Proxmox VE/PBS & DNS"]
+    Gatus -->|"Outage & Recovery Alerts"| Alerts["Discord & Email"]
 ```
 
-- **Container & Network Layout**: `gatus` (`gatus.ctr.xbhl.intranet`) joins both the external `proxy` network (for Traefik routing on `status.intranet.xbhl.online`) and the internal `internal` bridge network shared exclusively with the `postgres` sidecar (`depends_on: condition: service_healthy`). PostgreSQL persists check history and events (`caching: true`, `maximum-number-of-results: 100`, `maximum-number-of-events: 50`) in the local named volume `db:/var/lib/postgresql`.
-- **Static BusyBox Healthcheck Injection**: Because the upstream `ghcr.io/twin/gatus` image is built `FROM scratch` without `/bin/sh` or `wget`, `.gitlab-ci.yml` (`setup:generate-build-artifacts`) downloads a static musl `busybox` binary into `$BUILD_ARTIFACTS_DIR/bin/busybox`, mounted read-only at `./bin:/bin:ro` so Docker can execute `["CMD", "/bin/busybox", "wget", "--quiet", "--spider", "http://127.0.0.1:8080/health"]`. Prometheus metrics are enabled via `metrics: true` in `src/config/global.yaml`.
-- **Per-Group Configuration & Onboarding (`src/config/*.yaml`)**: `GATUS_CONFIG_PATH=/config` merges `src/config/global.yaml` (UI settings, PostgreSQL storage, and Discord/email default alerts with failure thresholds `5` and `10`, success threshold `3`, `send-on-resolved: true`) with 19 per-group files (`adguard`, `authelia`, `bookorbit`, `gitlab`, `grafana`, `homepage`, `internet-access`, `litellm`, `llama-cpp`, `nextcloud`, `open-webui`, `portainer`, `proxmox`, `qbittorrent`, `searxng`, `seerr`, `tautulli`, `traefik`, `whats-up-docker`).
-  - **Docker Service Onboarding ([`.agents/skills/add-service/SKILL.md`](./.agents/skills/add-service/SKILL.md))**: Standard service groups pair external HTTPS checks (`<component>-<type>-status`, carrying `alerts: *alerts` and `[CERTIFICATE_EXPIRATION] > 48h`) with a silent runtime container state check (`<component>-container-status` polling `http://<vm_hostname>:2375/containers/<container_name>/json` without `alerts`). Agents derive `vm-hostname`, `container-name`, `cloudflare-dns-entry-name`, and `healthcheck` statically from the target repo's `.gitlab-ci.yml` and `src/docker-compose.yml` (never probing `:2375` at agent-time), wire any required token into `src/env/service-tokens.env` + `.gitlab-ci.yml`, and open a `feat/<service>-monitoring` Merge Request to be merged **after** the target service deploys.
-  - **Hand-Maintained Infrastructure Groups**: `proxmox.yaml` (direct PVE `:8006` and PBS `:8007` API checks), DNS `A`/`CNAME` checks at the top of `adguard.yaml`, and ICMP/HTTPS reachability probes in `internet-access.yaml` are maintained outside automated container discovery.
+- **Unauthenticated Intranet Access & Dual Reachability**: Exposes the status dashboard and Prometheus `/metrics` without Authelia middleware or a Gatus `security:` block so Homepage widgets and operators can reach `status.intranet.xbhl.online` (or fallback host port `:12441` during ingress/DNS incidents); PostgreSQL 18 runs on an isolated `internal` bridge network to persist check history and events.
+- **Paired Ingress vs. Silent Container State Probes**: Service groups pair external HTTPS checks (`<component>-<type>-status`, enforcing `[CERTIFICATE_EXPIRATION] > 48h` and routing `alerts: *alerts`) with silent Docker Engine checks (`<component>-container-status` polling `<vm_hostname>:2375` without `alerts`) to separate ingress/TLS failures from unhealthy containers without duplicate alert noise.
+- **Static BusyBox Healthcheck Injection**: Because upstream `ghcr.io/twin/gatus` is built `FROM scratch` without a shell or `wget`, CI bundles a static musl `busybox` binary so Docker can probe `http://127.0.0.1:8080/health` locally.
+- **Modular Per-Group Configuration**: `GATUS_CONFIG_PATH=/config` merges `src/config/global.yaml` with per-group `src/config/<group>.yaml` files, combining agent-managed Docker service checks ([`.agents/skills/manage-endpoints/SKILL.md`](./.agents/skills/manage-endpoints/SKILL.md)) with hand-maintained infrastructure probes (`proxmox.yaml`, DNS queries in `adguard.yaml`, and external reachability in `internet-access.yaml`).
 
-## Required GitLab CI/CD Variables
+### External Credentials
 
-### Project-Scoped Variables (`home-lab/gatus`)
-
-| Variable | Target File (`setup:generate-build-artifacts`) | Purpose |
-| :--- | :--- | :--- |
-| `DISCORD_WEBHOOK_URL` | `env/discord.env` | Discord webhook URL for endpoint outage/recovery alerts (`src/config/global.yaml`; project-level override of group variable). |
-| `GITLAB_STATUS_TOKEN` | `env/service-tokens.env` | Query token (`?token=...`) for GitLab `/-/liveness` and `/-/readiness` checks (`src/config/gitlab.yaml`). |
-| `OPEN_WEBUI_AUTH_TOKEN` | `env/service-tokens.env` | Bearer token for authenticated `/api/models` readiness probe (`src/config/open-webui.yaml`). |
-| `TAUTULLI_API_KEY` | `env/service-tokens.env` | API key (`?apikey=...&cmd=status`) for Tautulli `/api/v2` check (`src/config/tautulli.yaml`). |
-| `PVE_TOKEN_ID`, `PVE_TOKEN_SECRET` | `env/service-tokens.env` (`PVE_API_TOKEN`) | Assembled as `${PVE_TOKEN_ID}=${PVE_TOKEN_SECRET}` (`=` delimiter) for `PVEAPIToken` headers (`src/config/proxmox.yaml`). |
-| `PBS_TOKEN_ID`, `PBS_TOKEN_SECRET` | `env/service-tokens.env` (`PBS_API_TOKEN`) | Assembled as `${PBS_TOKEN_ID}:${PBS_TOKEN_SECRET}` (`:` delimiter) for `PBSAPIToken` headers (`src/config/proxmox.yaml`). |
-
-### Group-Inherited Variables (`home-lab`)
-
-| Variable | Target / Consumer | Purpose |
-| :--- | :--- | :--- |
-| `SSH_USER`, `SSH_PRIVATE_KEY` | `docker-compose-service-deployment` | SSH deployment credentials for `nas.srv.xbhl.intranet`. |
-| `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_DNS_API_TOKEN` | `docker-compose-service-deployment` & `env/gatus.env` | Manages `status.intranet.xbhl.online` DNS record (`SERVICE_HOSTNAME`, also substituted into `GATUS_DOMAIN`). |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_TO` | `env/smtp.env` | Outbound SMTP credentials and sender/recipient addresses for email alerts (`src/config/global.yaml`). |
-
-*(Note: `src/env/db.env` sets `POSTGRES_DB=gatus`, `POSTGRES_USER=gatus`, and a static `POSTGRES_PASSWORD` committed directly in Git without CI/CD substitution.)*
+- **Discord Webhook**: Project-scoped `DISCORD_WEBHOOK_URL` configures the Discord channel webhook for outage and recovery notifications.
+- **Proxmox API Tokens**: `PVE_TOKEN_ID` / `PVE_TOKEN_SECRET` and `PBS_TOKEN_ID` / `PBS_TOKEN_SECRET` authenticate direct Proxmox VE (`:8006`) and Proxmox Backup Server (`:8007`) API probes.
+- **Monitored Application Tokens**: Upstream service tokens (`GITLAB_STATUS_TOKEN`, `OPEN_WEBUI_AUTH_TOKEN`, `TAUTULLI_API_KEY`, and `*_MONITORING_TOKEN` entries in `service-tokens.env`) authenticate protected health/readiness endpoints.
 
 ## Upgrades & Maintenance
 
-- **Upstream & Wrapper Sources**: Standard (tracked via `wud.link.template`); configuration and condition schema reference at <https://gatus.io/docs> (`GATUS_CONFIG_PATH=/config` merges `src/config/global.yaml` with all per-group `src/config/<group>.yaml` files).
-- **Version & Flavor Constraints**: `ghcr.io/twin/gatus` `v`-prefixed SemVer tags (`wud.tag.include=^v\d+\.\d+\.\d+$$`; upstream `Dockerfile` is `FROM scratch` with no shell or `wget`); `postgres` sidecar runs PostgreSQL 18 with local named volume `db:/var/lib/postgresql` (currently unlabelled for WUD).
-- **Intentional Choices (Do Not Propose)**: Publicly readable intranet status UI (`status.intranet.xbhl.online` and host port `12441:8080` without Authelia middleware or `security:` block); `*-container-status` endpoints in `src/config/*.yaml` poll `http://<vm_hostname>:2375/containers/<name>/json` without `alerts: *alerts` to avoid duplicate notifications alongside external HTTPS checks; `proxmox.yaml` uses `client.insecure: true` on direct node ports `:8006`/`:8007`.
-- **Upgrade & CI Gotchas**: Uses singular `src/env/*.env` (not `src/envs/`), with `src/env/db.env` copied untouched (`POSTGRES_PASSWORD` is static in Git) and `PVE_API_TOKEN` formatted with `=` (`ID=SECRET`) vs `PBS_API_TOKEN` with `:` (`ID:SECRET`) in `setup:generate-build-artifacts`; CI downloads a static musl `busybox` into `$BUILD_ARTIFACTS_DIR/bin/busybox` (`./bin:/bin:ro`) for the container `healthcheck`, and `delete-existing-container-files: true` relies on PostgreSQL using named volume `db` rather than a bind mount; renaming `group` or endpoint `name` in `src/config/*.yaml` drops historical PostgreSQL uptime data; `.agents/skills/add-service/SKILL.md` derives target service metadata statically from GitLab/repo files (never probe `:2375` at agent-time) and opens MRs that merge only after the target service deploys.
+- **Upstream & Wrapper Sources**: Tracked via `wud.link.template`; configuration and condition schema reference at <https://gatus.io/docs>, with endpoint lifecycle workflows in [`.agents/skills/manage-endpoints/SKILL.md`](./.agents/skills/manage-endpoints/SKILL.md).
+- **Version & Flavor Constraints**: `ghcr.io/twin/gatus` uses `v`-prefixed SemVer tags (`^v\d+\.\d+\.\d+$$`, `FROM scratch` image); the `postgres` sidecar tracks PostgreSQL 18 (unlabelled in WUD).
+- **Intentional Choices (Do Not Propose)**: Unauthenticated intranet UI on `status.intranet.xbhl.online` and `:12441`; silent `*-container-status` `:2375` probes without `alerts: *alerts`; `client.insecure: true` on direct Proxmox `:8006`/`:8007` checks.
+- **Upgrade & CI Gotchas**: Uses singular `src/env/` (not `src/envs/`); `setup:generate-build-artifacts` assembles `PVE_API_TOKEN` with `=` (`ID=SECRET`) vs. `PBS_API_TOKEN` with `:` (`ID:SECRET`) and downloads static musl `busybox` for the `FROM scratch` healthcheck; renaming `group` or endpoint `name` in `src/config/*.yaml` drops PostgreSQL uptime history; new service monitoring MRs must merge only **after** the target service deploys.
