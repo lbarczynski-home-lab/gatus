@@ -113,9 +113,9 @@ When a monitored endpoint requires authentication:
 1. Variable name: `<COMPONENT_NAME_UPPER_SNAKE>_MONITORING_TOKEN` (`example-app` → `EXAMPLE_APP_MONITORING_TOKEN`). Keep existing legacy variable names unchanged (`GITLAB_STATUS_TOKEN`, `OPEN_WEBUI_AUTH_TOKEN`, `TAUTULLI_API_KEY`, `PVE_API_TOKEN`, `PBS_API_TOKEN`) so existing GitLab CI/CD variables remain valid.
 2. Prefer sending the credential in an HTTP request header; fall back to a query parameter only when upstream documentation requires it.
 3. Append `<VAR>=PLACEHOLDER` to `src/env/service-tokens.env` (note singular `src/env/`, **not** `src/envs/`).
-4. Append to the `# service tokens` block in `.gitlab-ci.yml` (`setup:generate-build-artifacts`):
+4. Append a single-quoted fail-fast substitution to the `# service tokens` block in `.gitlab-ci.yml` (`setup:generate-build-artifacts`):
    ```yaml
-   - sed -i "s|^<VAR>=.*|<VAR>=${<VAR>}|" $BUILD_ARTIFACTS_DIR/env/service-tokens.env
+   - 'sed -i "s|^<VAR>=.*|<VAR>=${<VAR>:?ERROR: <VAR> is required and cannot be empty}|" "$BUILD_ARTIFACTS_DIR/env/service-tokens.env"'
    ```
    *(Preserve existing `PVE_API_TOKEN=${PVE_TOKEN_ID}=${PVE_TOKEN_SECRET}` and `PBS_API_TOKEN=${PBS_TOKEN_ID}:${PBS_TOKEN_SECRET}` delimiter rules untouched.)*
 
@@ -142,12 +142,13 @@ When a monitored endpoint requires authentication:
 ## 10. Git Workflow & Merge Request Submission
 
 1. Resolve `<gatus_dir>` cleanly (explicit prompt path, verified `home-lab/gatus` checkout, or `/tmp/homelab-work/<role>-gatus`) and pass `git -C "<gatus_dir>"` on every Git call:
+   - For persistent local checkouts (`keep_roundtrip`), record `original_ref` first via `git -C "<gatus_dir>" symbolic-ref --short -q HEAD` (falling back to `git -C "<gatus_dir>" rev-parse HEAD` if detached) and stash any pre-existing dirty work (`git -C "<gatus_dir>" stash push --include-untracked -m "auto-stash:gatus:<group_name>:<unix_ts>"`) before running `checkout -B ... origin/main`.
    - New service monitoring: `git -C "<gatus_dir>" fetch origin main` then `git -C "<gatus_dir>" checkout -B "feat/<group_name>-monitoring" origin/main` (`--label "type::feature"`).
    - Existing service update or removal: `git -C "<gatus_dir>" fetch origin main` then `git -C "<gatus_dir>" checkout -B "chore/<group_name>-monitoring" origin/main` (`--label "type::feature"` or `"type::fix"` as appropriate).
 2. Stage and commit one logical commit per group file (bundling its `src/env/service-tokens.env` and `.gitlab-ci.yml` changes):
    - Subject: `feat(monitoring): add <group_name> monitoring` (new), `chore(monitoring): update <group_name> monitoring` (update), or `chore(monitoring): remove <group_name> monitoring` (remove).
    - Body: one line per touched endpoint, `- <add|change|remove|rename> <endpoint-name>: <what changed>`.
-3. Push the branch, write the MR description to `/tmp/homelab-work/mr-desc-gatus-<group_name>.md` via `write_file`, and open the Merge Request targeting `main`:
+3. Push the branch, write the MR description to `/tmp/homelab-work/mr-desc-gatus-<group_name>.md` via `write_file`, and open the Merge Request targeting `main` (always passing both `--head` and `-R` so cross-repo invocations from `automations` never fail with `HTTP 422`):
    ```bash
    git -C "<gatus_dir>" push -u origin "<branch_name>"
    glab mr create \
@@ -158,10 +159,11 @@ When a monitored endpoint requires authentication:
      --label "<type_label>" \
      --remove-source-branch \
      --yes \
+     --head "https://gitlab.intranet.xbhl.online/home-lab/gatus" \
      -R "https://gitlab.intranet.xbhl.online/home-lab/gatus"
    ```
    **Merge Ordering Rule**: When onboarding a newly scaffolded service, state in the MR description that this Gatus MR **must be merged after** the target service MR deploys to `main`, preventing false alerts before the container and DNS record go live.
-4. Restore `<gatus_dir>` cleanly (`git -C "<gatus_dir>" checkout -f origin/main` for `/tmp/homelab-work/*` caches, or original branch for persistent checkouts).
+4. Restore `<gatus_dir>` cleanly (`git -C "<gatus_dir>" checkout "<original_ref>"` plus `stash pop` if stashed for persistent `keep_roundtrip` checkouts, `git -C "<gatus_dir>" checkout main` for newly cloned persistent dirs (`keep_cloned`), or `git -C "<gatus_dir>" checkout -f origin/main` strictly for `/tmp/homelab-work/*` caches).
 
 ## 11. Final Report
 
