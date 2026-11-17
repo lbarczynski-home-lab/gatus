@@ -10,6 +10,8 @@ endpoints:
     conditions:
       - "[STATUS] == 200"
       - "[BODY].installed == true"
+      - "[BODY].maintenance == false"
+      - "[BODY].needsDbUpgrade == false"
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts: *alerts
 
