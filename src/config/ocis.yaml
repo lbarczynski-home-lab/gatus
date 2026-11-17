@@ -5,7 +5,7 @@ alerts: &alerts
 endpoints:
   - name: ocis-health-status
     group: ocis
-    url: "https://files.xbhl.online/status.php"
+    url: "https://files.xbhl.online/status"
     interval: 30s
     conditions:
       - "[STATUS] == 200"
