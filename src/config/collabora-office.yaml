@@ -13,6 +13,26 @@ endpoints:
       - "[CERTIFICATE_EXPIRATION] > 48h"
     alerts: *alerts
 
+  - name: collabora-office-liveness-status
+    group: collabora-office
+    url: "https://office.xbhl.online/livez"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == ok"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: collabora-office-readiness-status
+    group: collabora-office
+    url: "https://office.xbhl.online/readyz"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == ok"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
   - name: collabora-office-container-status
     group: collabora-office
     url: "http://cloud.vm.xbhl.intranet:2375/containers/collabora/json"
