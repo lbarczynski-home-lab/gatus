@@ -36,6 +36,14 @@ endpoints:
     <<: *traefik-container-status-template
     url: "http://dns.vm.xbhl.intranet:2375/containers/traefik/json"
 
+  - name: traefik-networking-vm-api-status
+    <<: *traefik-api-overview-template
+    url: "https://networking.proxy.intranet.xbhl.online/api/overview"
+
+  - name: traefik-networking-vm-container-status
+    <<: *traefik-container-status-template
+    url: "http://networking.vm.xbhl.intranet:2375/containers/traefik/json"
+
   - name: traefik-cloud-vm-api-status
     <<: *traefik-api-overview-template
     url: "https://cloud.proxy.intranet.xbhl.online/api/overview"
