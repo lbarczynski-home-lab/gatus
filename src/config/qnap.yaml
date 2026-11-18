@@ -1,0 +1,72 @@
+alerts: &alerts
+  - type: discord
+  - type: email
+
+endpoints:
+  - name: qnap-web-ui-health-status
+    group: qnap
+    url: "https://nas.intranet.xbhl.online/cgi-bin/QTS.cgi"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == pat(*<title>Welcome to QNAP Turbo NAS</title>*)"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: qnap-web-ui-direct-status
+    group: qnap
+    url: "http://nas.srv.xbhl.intranet:8080/cgi-bin/QTS.cgi"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == pat(*<title>Welcome to QNAP Turbo NAS</title>*)"
+
+  - name: qnap-object-storage-health-status
+    group: qnap
+    url: "https://objectstorage.nas.intranet.xbhl.online/healthcheck"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == OK"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: qnap-object-storage-direct-status
+    group: qnap
+    url: "http://nas.srv.xbhl.intranet:8010/healthcheck"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == OK"
+
+  - name: qnap-mcp-health-status
+    group: qnap
+    url: "https://mcp.nas.intranet.xbhl.online/mcp"
+    method: POST
+    interval: 30s
+    headers:
+      Authorization: "Bearer ${QNAP_MCP_MONITORING_TOKEN}"
+      Content-Type: "application/json"
+      Accept: "application/json, text/event-stream"
+    body: '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"gatus","version":"1.0.0"}}}'
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].result.serverInfo.name == qnapnas/everything"
+      - "len([BODY].result.serverInfo.version) > 0"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+    alerts: *alerts
+
+  - name: qnap-mcp-direct-status
+    group: qnap
+    url: "http://nas.srv.xbhl.intranet:8442/mcp"
+    method: POST
+    interval: 30s
+    headers:
+      Authorization: "Bearer ${QNAP_MCP_MONITORING_TOKEN}"
+      Content-Type: "application/json"
+      Accept: "application/json, text/event-stream"
+    body: '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"gatus","version":"1.0.0"}}}'
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].result.serverInfo.name == qnapnas/everything"
+      - "len([BODY].result.serverInfo.version) > 0"
